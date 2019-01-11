@@ -22,19 +22,11 @@ from data_loader import Term
 
 
 def read_terms(terms_file):
-    statinfo = os.stat(terms_file)
-    file_size = statinfo.st_size
-    prev_pos = 0
     terms = []
-    with tqdm(total=file_size, unit='T', desc='read_terms', unit_scale=True, unit_divisor=1000) as pbar:
-        with open(terms_file, encoding='utf-8', newline='\n', errors='ignore') as f:
-            line = f.readline()
-            while line:
-                terms.append(Term.from_json(line))
-                pbar.update(f.tell() - prev_pos)
-                prev_pos = f.tell()
-                line = f.readline()
-    pbar.close()
+    with open(terms_file, encoding='utf-8', newline='\n', errors='ignore') as f:
+        lines = f.readlines()
+        for line in tqdm(lines, desc="read_terms", unit_divisor=1000, unit='T'):
+            terms.append(Term.from_json(line))
     return terms
 
 
