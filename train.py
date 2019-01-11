@@ -20,7 +20,6 @@ import os
 from tensorboardX import SummaryWriter
 
 parser = argparse.ArgumentParser(description='PyTorch WAND Thres predictor')
-parser.add_argument('--terms', type=str, required=True, help='term data')
 parser.add_argument('--queries', type=str, required=True, help='query data')
 parser.add_argument('--dev_queries', type=str,
                     required=True, help='dev query data')
