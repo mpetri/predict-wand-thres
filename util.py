@@ -10,15 +10,11 @@ def print_to_string(*args, **kwargs):
     return contents
 
 def create_file_name(args):
-    file_name = "BATCH{}-EPOCH{}-LR{}-MARGIN{}-PSENTS{}-MINSLEN{}-MAXSLEN{}-NSAMPLES{}-SEMBED{}".format(args.batch_size,
+    file_name = "BATCH{}-EPOCH{}-LR{}-LAYERS{}-EMBED{}".format(args.batch_size,
             args.epochs,
             args.lr,
-            args.margin_loss_margin,
-            args.max_parallel_sents,
-            args.min_slen,
-            args.max_slen,
-            args.neg_samples,
-            args.sent_embed_size)
+	    args.layers,
+	    args.embed_size)
     return file_name
 
 def init_log(args):

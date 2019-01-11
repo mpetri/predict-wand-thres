@@ -22,14 +22,20 @@ from tensorboardX import SummaryWriter
 parser = argparse.ArgumentParser(description='PyTorch WAND Thres predictor')
 parser.add_argument('--terms', type=str, required=True, help='term data')
 parser.add_argument('--queries', type=str, required=True, help='query data')
-parser.add_argument('--thresholds', type=str,
-                    required=True, help='threshold data')
+parser.add_argument('--dev_queries', type=str,
+                    required=True, help='dev query data')
+parser.add_argument('--test_queries', type=str,
+                    required=False, help='test query data')
 parser.add_argument('--batch_size', type=int,
                     default=hyperparams.default_batch_size, help='batch size')
 parser.add_argument('--clip', type=float,
                     default=hyperparams.default_gradient_clipping, help='gradient clipping')
 parser.add_argument('--lr', type=float,
                     default=hyperparams.default_learning_rate, help='initial learning rate')
+parser.add_argument('--embed_size', type=int,
+                    default=hyperparams.default_embed_size, help='embedding size')
+parser.add_argument('--layers', type=int,
+                    default=hyperparams.default_num_layers, help='number of layers')
 parser.add_argument('--epochs', default=hyperparams.default_epochs,
                     type=int, required=False, help='training epochs')
 parser.add_argument('--output_prefix', default="./",
@@ -60,7 +66,8 @@ else:
     args.device = torch.device('cpu')
 my_print("Using torch device:", args.device)
 
-dataset = data_loader.InvertedIndexData(args)
+dataset = data_loader.InvertedIndexData(args, args.queries)
+dev_dataset = data_loader.InvertedIndexData(args, args.dev_queries)
 
 dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
 
@@ -69,7 +76,7 @@ dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
 # ###############################################################################
 model_file = args.output_prefix + "/" + create_file_name(args) + ".model"
 my_print("Writing model to file", model_file)
-model = models.Simple()
+model = models.Simple(args.embed_size)
 model = model.to(device=args.device)
 my_print(model)
 
@@ -106,16 +113,18 @@ def train(epoch):
         pbar.close()
 
 
-def evaluate(dataset):
+def evaluate(eval_data):
     with torch.no_grad():
         model.eval()
-        ranks = []
-        de_embeds = model.compute_de_embeddings(dataset, dataset.dev_de)
-        en_embeds = model.compute_en_embeddings(dataset, dataset.dev_en)
-        for i, de_embed in enumerate(de_embeds):
-            cmp_ranks, _ = model.compute_rank(de_embed, i, en_embeds)
-            ranks.append(cmp_ranks[i])
-        return ranks
+        abs_error_sum = 0
+        errors = []
+        for qry, thres in eval_data:
+            qry = qry.view(1, qry.size(0), qry.size(1))
+            pred_thres = model(qry.to(args.device))
+            diff = pred_thres - thres
+            abs_error_sum += torch.abs(pred_thres - thres)
+            errors.append(diff.item())
+        return abs_error_sum.item(), errors
 
 
 # # Loop over epochs.
@@ -128,19 +137,20 @@ try:
         epoch_start_time = time.time()
         my_print("start epoch {}/{}".format(epoch, args.epochs))
         train(epoch)
-        ranks = evaluate(parallel_dataset)
-        writer.add_histogram('eval/ranks', np.asarray(ranks), epoch)
-        val_mr = np.mean(np.asarray(ranks))
-        writer.add_scalar('eval/mean_rank', val_mr, epoch)
+        abs_error_sum, errors = evaluate(dev_dataset)
+        writer.add_scalar('eval/abs_error_sum', abs_error_sum, epoch)
+        val_mean_error = np.mean(np.asarray(errors))
+        writer.add_histogram('eval/errors', np.asarray(errors), epoch)
+        writer.add_scalar('eval/mean_error', val_mean_error, epoch)
         my_print('-' * 89)
-        my_print("epoch {} val MR {}".format(epoch, val_mr))
-        my_print("epoch {} ranks {}".format(epoch, ranks))
+        my_print("epoch {} val val_mean_error {}".format(epoch, val_mean_error))
+        my_print("epoch {} errors {}".format(epoch, errors[:10]))
         my_print('-' * 89)
         # Save the model if the validation loss is the best we've seen so far.
-        if not best_val_loss or val_mr < best_val_loss:
+        if not best_val_loss or val_mean_error < best_val_loss:
             with open(model_file, 'wb') as f:
                 torch.save(model, f)
-            best_val_loss = val_mr
+            best_val_loss = val_mean_error
 
 except KeyboardInterrupt:
     my_print('-' * 89)

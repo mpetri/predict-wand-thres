@@ -8,196 +8,59 @@ import hyperparams
 from util import my_print
 import torch.nn.functional as F
 
+class Simple(nn.Module):
+    def __init__(self,embed_size,num_layers = hyperparams.default_num_layers):
+        super(Simple,self).__init__()
+        my_print("Initializing Simple model")
+        self.Ft = nn.Embedding( len(hyperparams.const_Ft_buckets) , embed_size)
+        self.Meanft = nn.Embedding( len(hyperparams.const_freq_buckets) , embed_size)
+        self.Medft = nn.Embedding( len(hyperparams.const_freq_buckets) , embed_size)
+        self.Minft = nn.Embedding( len(hyperparams.const_freq_buckets) , embed_size)
+        self.Maxft = nn.Embedding( len(hyperparams.const_freq_buckets) , embed_size)
+        self.Largerft256 = nn.Embedding( len(hyperparams.const_Ft_buckets) , embed_size)
+        self.Largerft128 = nn.Embedding( len(hyperparams.const_Ft_buckets) , embed_size)
+        self.Largerft64 = nn.Embedding( len(hyperparams.const_Ft_buckets) , embed_size)
+        self.Largerft32 = nn.Embedding( len(hyperparams.const_Ft_buckets) , embed_size)
+        self.Largerft16 = nn.Embedding( len(hyperparams.const_Ft_buckets) , embed_size)
+        self.Largerft8 = nn.Embedding( len(hyperparams.const_Ft_buckets) , embed_size)
+        self.Largerft4 = nn.Embedding( len(hyperparams.const_Ft_buckets) , embed_size)
+        self.Largerft2 = nn.Embedding( len(hyperparams.const_Ft_buckets) , embed_size)
 
-class TwoGRU(nn.Module):
-    def __init__(self,input_dim, hidden_dim,dev, num_layers = hyperparams.default_num_layers):
-        super(TwoGRU,self).__init__()
-        my_print("Initializing TwoGRU model")
-        self.hidden_dim = hidden_dim
-        self.input_dim = input_dim
+        # 13 * embed size = 16 * 13 = 208
+
         self.num_layers = num_layers
-        self.num_directions = 2
-        self.gru_de = nn.GRU(input_dim, hidden_dim, num_layers,bidirectional=True,batch_first=True)
-        self.gru_en = nn.GRU(input_dim, hidden_dim, num_layers,bidirectional=True,batch_first=True)
-        self.mapping = nn.Linear(input_dim, input_dim, bias=False)
-        self.I = torch.eye(input_dim,device=dev,requires_grad=False)
+
+        self.input_dim = hyperparams.default_max_qry_len*hyperparams.num_term_params*embed_size
+        self.layers = torch.nn.Sequential()
+        for i in range(num_layers):
+            self.layers.add_module("linear_{}".format(i+1),nn.Linear(self.input_dim,self.input_dim))
+            self.layers.add_module("ReLU_{}".format(i+1),nn.ReLU())
+        self.layers.add_module("last_linear",nn.Linear(self.input_dim, 1))
 
     def flatten_parameters(self):
         self.gru_de.flatten_parameters()
         self.gru_en.flatten_parameters()
 
-    def forward(self,padded_input,input_lens):
-        seq_len = padded_input.size(2)
-        batch_size = padded_input.size(0)
+    def forward(self,queries):
+        #print("queries.size() =",queries.size())
+        emb_Ft = self.Ft(queries[:,:,0])
+        #print("emb_Ft.size() =",emb_Ft.size())
+        emb_Meanft = self.Meanft(queries[:,:,1])
+        emb_Medft = self.Medft(queries[:,:,2])
+        emb_Minft = self.Minft(queries[:,:,3])
+        emb_Maxft = self.Maxft(queries[:,:,4])
+        emb_Largerft256 = self.Largerft256(queries[:,:,5])
+        emb_Largerft128 = self.Largerft128(queries[:,:,6])
+        emb_Largerft64 = self.Largerft64(queries[:,:,7])
+        emb_Largerft32 = self.Largerft32(queries[:,:,8])
+        emb_Largerft16 = self.Largerft16(queries[:,:,9])
+        emb_Largerft8 = self.Largerft8(queries[:,:,10])
+        emb_Largerft4 = self.Largerft4(queries[:,:,11])
+        emb_Largerft2 = self.Largerft2(queries[:,:,12])
+        query_embed = torch.cat((emb_Ft, emb_Meanft,emb_Medft,emb_Minft,emb_Maxft,emb_Largerft256,emb_Largerft128,emb_Largerft64,emb_Largerft32,emb_Largerft16,emb_Largerft8,emb_Largerft4,emb_Largerft2), 2)
+        query_embed = query_embed.view(-1,self.input_dim)
+        #print("query_embed.size() =",query_embed.size())
+        pred_thres = self.layers(query_embed)
+        #print("pred_thres.size() =",pred_thres.size())
+        return pred_thres
 
-        input_de = padded_input[:,0,:,:]
-        lens_de = input_lens[:,0,0]
-        rotated_input_de = self.mapping(input_de)
-
-        output_de, _ = self.gru_de(rotated_input_de)
-        output_de_reshape = output_de.view(-1,seq_len,self.num_directions, self.hidden_dim)
-        output_de_backward_top = output_de_reshape[:,0,1,:]
-        output_de_forward_top = output_de_reshape[range(batch_size),lens_de,0,:]
-        output_de_concat = torch.cat((output_de_forward_top,output_de_backward_top),dim=1).view(batch_size,1,-1)
-
-        input_en = padded_input[:,1:,:,:].contiguous().view(-1,input_de.size(1),input_de.size(2))
-        lens_en = input_lens[:,1:,:].contiguous().view(-1)
-        output_en, _ = self.gru_en(input_en)
-        output_en_reshape = output_en.view(-1,seq_len,self.num_directions, self.hidden_dim)
-        output_en_backward_top = output_en_reshape[:,0,1,:].view(batch_size,-1,self.hidden_dim)
-        output_en_forward_top = output_en_reshape[range(len(lens_en)),lens_en,1,:].view(batch_size,-1,self.hidden_dim)
-
-        output_en_concat = torch.cat((output_en_forward_top,output_en_backward_top),dim=2)
-        cos = nn.CosineSimilarity(dim=2, eps=1e-6)
-        score = torch.neg(cos(output_en_concat,output_de_concat))
-        return score
-
-    def compute_de_embeddings(self,dataset,sentences):
-        max_len = 0
-        for s in sentences:
-            max_len = max(len(s),max_len)
-
-        embeds = torch.zeros(len(sentences),max_len,dataset.word_embed_dim,requires_grad=False,device=torch.device('cpu'))
-        lens = torch.zeros(len(sentences),requires_grad=False,device=torch.device('cpu'),dtype=torch.int64)
-
-        for sidx,sent in enumerate(sentences):
-            lens[sidx] = len(sent) - 1
-            embeds[sidx,:,:] = torch.index_select(dataset.word_embeds_de,0,sent)
-
-        embeds = embeds.to(dataset.device)
-        lens = lens.to(dataset.device)
-
-        rotated_input_de = self.mapping(embeds)
-        output_de, _ = self.gru_de(rotated_input_de)
-        output_de_reshape = output_de.view(-1,max_len,self.num_directions, self.hidden_dim)
-        output_de_backward_top = output_de_reshape[:,0,1,:]
-        output_de_forward_top = output_de_reshape[range(len(sentences)),lens,0,:]
-        output_de_concat = torch.cat((output_de_forward_top,output_de_backward_top),dim=1).view(len(sentences),1,-1)
-
-        return output_de_concat
-
-    def compute_en_embeddings(self,dataset,sentences):
-        max_len = 0
-        for s in sentences:
-            max_len = max(len(s),max_len)
-
-        embeds = torch.zeros(len(sentences),max_len,dataset.word_embed_dim,requires_grad=False,device=torch.device('cpu'))
-        lens = torch.zeros(len(sentences),requires_grad=False,device=torch.device('cpu'),dtype=torch.int64)
-
-        for sidx,sent in enumerate(sentences):
-            lens[sidx] = len(sent) - 1
-            embeds[sidx,0:len(sent),:] = torch.index_select(dataset.word_embeds_en,0,sent)
-
-        embeds = embeds.to(dataset.device)
-        lens = lens.to(dataset.device)
-
-        output_en, _ = self.gru_en(embeds)
-        output_en_reshape = output_en.view(-1,max_len,self.num_directions, self.hidden_dim)
-        output_en_backward_top = output_en_reshape[:,0,1,:]
-        output_en_forward_top = output_en_reshape[range(len(sentences)),lens,0,:]
-        output_en_concat = torch.cat((output_en_forward_top,output_en_backward_top),dim=1).view(len(sentences),1,-1)
-
-        return output_en_concat
-
-    def compute_rank(self,de_embed,correct_idx,en_embeds):
-        cos = nn.CosineSimilarity(dim=2, eps=1e-6)
-        de_embed = de_embed.reshape(1,1,de_embed.size(1))
-        scores = cos(en_embeds,de_embed)
-        ranks = stats.rankdata(scores.cpu().detach().numpy(),method='ordinal')
-        return ranks,scores
-
-class SingleGRU(nn.Module):
-    def __init__(self,input_dim, hidden_dim,dev, num_layers = hyperparams.default_num_layers):
-        super(TwoGRU,self).__init__()
-        my_print("Initializing SingleGRU model")
-        self.hidden_dim = hidden_dim
-        self.input_dim = input_dim
-        self.num_layers = num_layers
-        self.num_directions = 2
-        self.gru = nn.GRU(input_dim, hidden_dim, num_layers,bidirectional=True,batch_first=True)
-        self.mapping = nn.Linear(input_dim, input_dim, bias=False)
-        self.I = torch.eye(input_dim,device=dev,requires_grad=False)
-
-    def flatten_parameters(self):
-        self.gru.flatten_parameters()
-
-    def forward(self,padded_input,input_lens):
-        seq_len = padded_input.size(2)
-        batch_size = padded_input.size(0)
-
-        input_de = padded_input[:,0,:,:]
-        lens_de = input_lens[:,0,0]
-        rotated_input_de = self.mapping(input_de)
-
-        output_de, _ = self.gru(rotated_input_de)
-        output_de_reshape = output_de.view(-1,seq_len,self.num_directions, self.hidden_dim)
-        output_de_backward_top = output_de_reshape[:,0,1,:]
-        output_de_forward_top = output_de_reshape[range(batch_size),lens_de,0,:]
-        output_de_concat = torch.cat((output_de_forward_top,output_de_backward_top),dim=1).view(batch_size,1,-1)
-
-        input_en = padded_input[:,1:,:,:].contiguous().view(-1,input_de.size(1),input_de.size(2))
-        lens_en = input_lens[:,1:,:].contiguous().view(-1)
-        output_en, _ = self.gru(input_en)
-        output_en_reshape = output_en.view(-1,seq_len,self.num_directions, self.hidden_dim)
-        output_en_backward_top = output_en_reshape[:,0,1,:].view(batch_size,-1,self.hidden_dim)
-        output_en_forward_top = output_en_reshape[range(len(lens_en)),lens_en,1,:].view(batch_size,-1,self.hidden_dim)
-
-        output_en_concat = torch.cat((output_en_forward_top,output_en_backward_top),dim=2)
-        cos = nn.CosineSimilarity(dim=2, eps=1e-6)
-        score = torch.neg(cos(output_en_concat,output_de_concat))
-        return score
-
-
-    def compute_de_embeddings(self,dataset,sentences):
-        max_len = 0
-        for s in sentences:
-            max_len = max(len(s),max_len)
-
-        embeds = torch.zeros(len(sentences),max_len,dataset.word_embed_dim,requires_grad=False,device=torch.device('cpu'))
-        lens = torch.zeros(len(sentences),requires_grad=False,device=torch.device('cpu'),dtype=torch.int64)
-
-        for sidx,sent in enumerate(sentences):
-            lens[sidx] = len(sent) - 1
-            embeds[sidx,:,:] = torch.index_select(dataset.word_embeds_de,0,sent)
-
-        embeds = embeds.to(dataset.device)
-        lens = lens.to(dataset.device)
-
-        rotated_input_de = self.mapping(embeds)
-        output_de, _ = self.gru(rotated_input_de)
-        output_de_reshape = output_de.view(-1,max_len,self.num_directions, self.hidden_dim)
-        output_de_backward_top = output_de_reshape[:,0,1,:]
-        output_de_forward_top = output_de_reshape[range(len(sentences)),lens,0,:]
-        output_de_concat = torch.cat((output_de_forward_top,output_de_backward_top),dim=1).view(len(sentences),1,-1)
-
-        return output_de_concat
-
-    def compute_en_embeddings(self,dataset,sentences):
-        max_len = 0
-        for s in sentences:
-            max_len = max(len(s),max_len)
-
-        embeds = torch.zeros(len(sentences),max_len,dataset.word_embed_dim,requires_grad=False,device=torch.device('cpu'))
-        lens = torch.zeros(len(sentences),requires_grad=False,device=torch.device('cpu'),dtype=torch.int64)
-
-        for sidx,sent in enumerate(sentences):
-            lens[sidx] = len(sent) - 1
-            embeds[sidx,0:len(sent),:] = torch.index_select(dataset.word_embeds_en,0,sent)
-
-        embeds = embeds.to(dataset.device)
-        lens = lens.to(dataset.device)
-
-        output_en, _ = self.gru(embeds)
-        output_en_reshape = output_en.view(-1,max_len,self.num_directions, self.hidden_dim)
-        output_en_backward_top = output_en_reshape[:,0,1,:]
-        output_en_forward_top = output_en_reshape[range(len(sentences)),lens,0,:]
-        output_en_concat = torch.cat((output_en_forward_top,output_en_backward_top),dim=1).view(len(sentences),1,-1)
-
-        return output_en_concat
-
-    def compute_rank(self,de_embed,correct_idx,en_embeds):
-        cos = nn.CosineSimilarity(dim=2, eps=1e-6)
-        de_embed = de_embed.reshape(1,1,de_embed.size(1))
-        scores = cos(en_embeds,de_embed)
-        ranks = stats.rankdata(scores.cpu().detach().numpy(),method='ordinal')
-        return ranks,scores
