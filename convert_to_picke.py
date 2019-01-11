@@ -26,7 +26,7 @@ def read_terms(terms_file):
     file_size = statinfo.st_size
     prev_pos = 0
     with tqdm(total=file_size, unit='T', desc='read_terms', unit_scale=True, unit_divisor=1000) as pbar:
-        with open(file_name, encoding='utf-8', newline='\n', errors='ignore') as f:
+        with open(terms_file, encoding='utf-8', newline='\n', errors='ignore') as f:
             line = f.readline()
             while line:
                 terms.append(Term.from_json(line))
