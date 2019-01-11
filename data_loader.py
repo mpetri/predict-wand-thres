@@ -77,7 +77,6 @@ def bucketize(number, bucket_boundaries):
 def create_tensors(queries, dev):
     qry = torch.zeros(len(queries), hyperparams.default_max_qry_len,
                       hyperparams.num_term_params, requires_grad=False, device=dev, dtype=torch.long)
-    print(qry)
     for qidx, q in enumerate(queries):
         for tidx, t in enumerate(q.mapped_terms):
             qry[qidx, tidx, 0] = bucketize(
@@ -127,7 +126,6 @@ class InvertedIndexData(Dataset):
 
         my_print("dataset statistics:", qry_file)
         my_print("\tqueries =", len(self.queries))
-        my_print("\tterms =", len(self.terms))
 
     def __len__(self):
         return len(self.queries)
