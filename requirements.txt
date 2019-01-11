@@ -1,0 +1,9 @@
+scipy
+tqdm
+pandas
+seaborn
+numpy
+torch
+faiss-cpu
+matplotlib
+tensorboardX
