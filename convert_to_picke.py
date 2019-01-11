@@ -25,6 +25,7 @@ def read_terms(terms_file):
     statinfo = os.stat(terms_file)
     file_size = statinfo.st_size
     prev_pos = 0
+    terms = []
     with tqdm(total=file_size, unit='T', desc='read_terms', unit_scale=True, unit_divisor=1000) as pbar:
         with open(terms_file, encoding='utf-8', newline='\n', errors='ignore') as f:
             line = f.readline()
