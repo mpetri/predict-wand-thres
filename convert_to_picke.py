@@ -26,6 +26,7 @@ def read_terms(terms_file):
     with open(terms_file, encoding='utf-8', newline='\n', errors='ignore') as f:
         lines = f.readlines()
         for line in tqdm(lines, desc="read_terms", unit_divisor=1000, unit='T'):
+
             terms.append(Term.from_json(line))
     return terms
 

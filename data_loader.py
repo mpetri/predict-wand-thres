@@ -120,14 +120,13 @@ def create_thresholds(queries, dev):
                         device=dev, dtype=torch.float)
     print(thres)
     for qidx, q in enumerate(queries):
-        thres[qidx] = q.thres
+        thres[qidx] = q.wand_thres
     return thres
 
 
 class InvertedIndexData(Dataset):
     def __init__(self, args, qry_file):
-        self.terms = read_terms(args.terms)
-        self.queries = read_queries(qry_file, self.terms)
+        self.queries = read_queries(qry_file)
         self.tensor_queries = create_tensors(self.queries, args.device)
         self.tensor_thres = create_thresholds(self.queries, args.device)
 
