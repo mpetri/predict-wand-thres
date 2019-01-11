@@ -47,7 +47,7 @@ class Query:
     mapped_terms: List[Term] = field(default_factory=list)
 
 
-def read_queries(query_file, terms):
+def read_queries(query_file):
     ### read query file ###
     queries = []
     skipped = 0
@@ -60,11 +60,6 @@ def read_queries(query_file, terms):
                 queries.append(Query.from_json(line))
             else:
                 skipped += 1
-
-    for q in queries:
-        for t in q.terms:
-            if t < len(terms):
-                q.mapped_terms.append(terms[t])
 
     print("skipped queries {} out of {}".format(skipped, total))
     return queries
