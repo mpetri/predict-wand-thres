@@ -112,7 +112,6 @@ def create_tensors(queries, dev):
 def create_thresholds(queries, dev):
     thres = torch.zeros(len(queries), 1, requires_grad=False,
                         device=dev, dtype=torch.float)
-    print(thres)
     for qidx, q in enumerate(queries):
         thres[qidx] = q.wand_thres
     return thres
