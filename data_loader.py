@@ -79,7 +79,7 @@ def create_tensors(queries, dev):
     qry = torch.zeros(len(queries), hyperparams.default_max_qry_len,
                       hyperparams.num_term_params, requires_grad=False, device=dev, dtype=torch.long)
     for qidx, q in enumerate(queries):
-        for tidx, t in enumerate(q.mapped_terms):
+        for tidx, t in enumerate(q.term_data):
             qry[qidx, tidx, 0] = bucketize(
                 t.wand_upper, hyperparams.const_score_buckets)
             qry[qidx, tidx, 1] = bucketize(t.Ft, hyperparams.const_Ft_buckets)
