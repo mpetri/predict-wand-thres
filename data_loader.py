@@ -19,7 +19,7 @@ from typing import List
 
 
 @dataclass_json
-@dataclass
+@dataclass(frozen=True)
 class Term:
     id: float
     wand_upper: float
@@ -39,7 +39,7 @@ class Term:
 
 
 @dataclass_json
-@dataclass
+@dataclass(frozen=True)
 class Query:
     id: int
     wand_thres: float
