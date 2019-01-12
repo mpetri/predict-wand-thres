@@ -57,8 +57,9 @@ def read_queries(query_file):
         for line in tqdm(lines, desc="read qrys"):
             total += 1
             new_query = Query.from_json(line)
+            print(new_query)
             if len(new_query.term_ids) <= hyperparams.default_max_qry_len:
-                queries.append(Query.from_json(line))
+                queries.append(new_query)
             else:
                 skipped += 1
 
