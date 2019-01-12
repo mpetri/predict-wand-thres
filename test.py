@@ -26,11 +26,10 @@ parser.add_argument('--model', type=str, required=True, help='model file')
 parser.add_argument('--device', default="cpu", type=str,
                     required=False, help='compute device')
 args = parser.parse_args()
-init_log(args)
 torch.set_num_threads(hyperparams.default_threads)
-my_print("Parameters:")
+print("Parameters:")
 for k, v in sorted(vars(args).items()):
-    my_print("\t{0}: {1}".format(k, v))
+    print("\t{0}: {1}".format(k, v))
 
 # Set the random seed manually for reproducibility.
 torch.manual_seed(hyperparams.random_seed)
@@ -47,7 +46,7 @@ if torch.cuda.is_available():
 
 else:
     args.device = torch.device('cpu')
-my_print("Using torch device:", args.device)
+print("Using torch device:", args.device)
 
 dataset = data_loader.InvertedIndexData(args, args.queries)
 
