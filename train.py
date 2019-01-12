@@ -39,8 +39,8 @@ parser.add_argument('--epochs', default=hyperparams.default_epochs,
                     type=int, required=False, help='training epochs')
 parser.add_argument('--output_prefix', default="./",
                     type=str, required=False, help='output prefix')
-parser.add_argument('--device', default="cpu", type=str,
-                    required=False, help='compute device')
+parser.add_argument('--mse', action='store_false',
+                    default=False, help='use MSE error')
 args = parser.parse_args()
 init_log(args)
 torch.set_num_threads(hyperparams.default_threads)
@@ -89,6 +89,8 @@ def train(epoch):
         epoch, len(dataset), lr))
 
     loss_func = nn.SmoothL1Loss()
+    if args.mse == True:
+        loss_func = nn.MSELoss()
 
     with tqdm(total=len(dataloader), unit='batches', desc='train') as pbar:
         losses = []
