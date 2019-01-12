@@ -39,8 +39,8 @@ parser.add_argument('--epochs', default=hyperparams.default_epochs,
                     type=int, required=False, help='training epochs')
 parser.add_argument('--output_prefix', default="./",
                     type=str, required=False, help='output prefix')
-parser.add_argument('--mse', action='store_true',
-                    default=False, help='use MSE error')
+parser.add_argument('--quantile', type=float,
+                    default=0.5, help='quantile')
 parser.add_argument('--device', default="cpu", type=str,
                     required=False, help='compute device')
 args = parser.parse_args()
@@ -85,7 +85,7 @@ writer = SummaryWriter(args.output_prefix + "/runs/" + create_file_name(args))
 
 huber_loss = nn.SmoothL1Loss()
 
-quantiles = hyperparams.quantiles.to(args.device)
+quantiles = torch.tensor([[args.quantile]]).view(1, -1).to(args.device)
 
 
 def quantile_loss(x, y):
