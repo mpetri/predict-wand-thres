@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 default_learning_rate = 0.001
 default_epochs = 20
@@ -21,4 +22,4 @@ const_score_buckets = [0.0, 0.1, 0.25, 0.5, 1.0, 1.5,
                        2.0, 2.5, 3.0, 4.0, 5.0, 7.5, 10, 12.5, 15.0]
 
 num_quantiles = 10
-quantiles = (2 * np.arange(num_quantiles) + 1) / (2.0 * 10)
+quantiles = torch.Tensor(2 * np.arange(num_quantiles) + 1) / (2.0 * 10)
