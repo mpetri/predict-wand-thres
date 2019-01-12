@@ -83,6 +83,16 @@ my_print(model)
 
 writer = SummaryWriter(args.output_prefix + "/runs/" + create_file_name(args))
 
+huber_loss = nn.SmoothL1Loss()
+
+
+def quantile_loss(x, y):
+    diff = x - y
+    loss = huber_loss(x, y) * (hyperparams.quantiles -
+                               (diff.detach() < 0).float()).abs()
+    loss = loss.mean()
+    return loss
+
 
 def train(epoch):
     model.train()
@@ -90,7 +100,6 @@ def train(epoch):
     my_print("epoch {} start training {} instances with lr {}".format(
         epoch, len(dataset), lr))
 
-    loss_func = nn.SmoothL1Loss()
     if args.mse == True:
         loss_func = nn.MSELoss()
 
@@ -101,7 +110,7 @@ def train(epoch):
             queries, thres = batch
             scores = model(queries.to(args.device))
             #print(scores, thres)
-            loss = loss_func(scores, thres)
+            loss = quantile_loss(scores, thres)
             # print(loss)
             writer.add_scalar('loss/total', loss.item(), batch_num)
             losses.append(loss.item())
