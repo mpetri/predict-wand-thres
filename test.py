@@ -53,6 +53,7 @@ dataset = data_loader.InvertedIndexData(args, args.queries)
 with torch.no_grad():
     with open(args.model, 'rb') as f:
         model = torch.load(f, map_location=args.device)
+        print(model)
         model.eval()
         print("predicted;actual;time_ms")
         total_time_ms = 0
