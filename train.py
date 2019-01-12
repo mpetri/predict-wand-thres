@@ -96,7 +96,9 @@ def train(epoch):
             optim.zero_grad()
             queries, thres = batch
             scores = model(queries.to(args.device))
+            print(scores, thres)
             loss = loss_func(scores, thres)
+            print(loss)
             writer.add_scalar('loss/total', loss.item(), batch_num)
             losses.append(loss.item())
             loss.backward()
