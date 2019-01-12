@@ -73,5 +73,5 @@ class Simple(nn.Module):
         query_embed = query_embed.view(-1, self.input_dim)
         print("query_embed.size()", query_embed.size())
         pred_thres = self.layers(query_embed)
-        print("pred_thres.size()", query_embed.size())
+        print("pred_thres.size()", pred_thres.size())
         return pred_thres
