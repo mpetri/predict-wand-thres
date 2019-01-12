@@ -53,6 +53,7 @@ class Simple(nn.Module):
         self.layers.add_module("last_linear", nn.Linear(self.input_dim, 1))
 
     def forward(self, queries):
+        print("queries.size()", queries.size())
         emb_WAND_Upper = self.WAND_upper(queries[:, :, 0])
         emb_Ft = self.Ft(queries[:, :, 1])
         emb_Meanft = self.Meanft(queries[:, :, 2])
@@ -70,5 +71,7 @@ class Simple(nn.Module):
         query_embed = torch.cat((emb_WAND_Upper, emb_Ft, emb_Meanft, emb_Medft, emb_Minft, emb_Maxft, emb_Largerft256, emb_Largerft128,
                                  emb_Largerft64, emb_Largerft32, emb_Largerft16, emb_Largerft8, emb_Largerft4, emb_Largerft2), 2)
         query_embed = query_embed.view(-1, self.input_dim)
+        print("query_embed.size()", query_embed.size())
         pred_thres = self.layers(query_embed)
+        print("pred_thres.size()", query_embed.size())
         return pred_thres
