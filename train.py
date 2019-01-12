@@ -39,7 +39,7 @@ parser.add_argument('--epochs', default=hyperparams.default_epochs,
                     type=int, required=False, help='training epochs')
 parser.add_argument('--output_prefix', default="./",
                     type=str, required=False, help='output prefix')
-parser.add_argument('--mse', action='store_false',
+parser.add_argument('--mse', action='store_true',
                     default=False, help='use MSE error')
 parser.add_argument('--device', default="cpu", type=str,
                     required=False, help='compute device')
