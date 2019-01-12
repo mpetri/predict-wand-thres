@@ -54,6 +54,7 @@ class Simple(nn.Module):
 
     def forward(self, queries):
         print("queries.size()", queries.size())
+        print(queries)
         emb_WAND_Upper = self.WAND_upper(queries[:, :, 0])
         print("emb_WAND_Upper.size()", emb_WAND_Upper.size())
         emb_Ft = self.Ft(queries[:, :, 1])
