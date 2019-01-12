@@ -44,7 +44,7 @@ class Query:
     id: int
     wand_thres: float
     term_ids: List[float]
-    mapped_terms: List[Term] = field(default_factory=list)
+    term_data: List[Term] = field(default_factory=list)
 
 
 def read_queries(query_file):
