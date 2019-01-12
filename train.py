@@ -41,6 +41,8 @@ parser.add_argument('--output_prefix', default="./",
                     type=str, required=False, help='output prefix')
 parser.add_argument('--mse', action='store_false',
                     default=False, help='use MSE error')
+parser.add_argument('--device', default="cpu", type=str,
+                    required=False, help='compute device')
 args = parser.parse_args()
 init_log(args)
 torch.set_num_threads(hyperparams.default_threads)
