@@ -120,6 +120,7 @@ def evaluate(eval_data):
         for qry, thres in eval_data:
             qry = qry.view(1, qry.size(0), qry.size(1))
             pred_thres = model(qry.to(args.device))
+            print("pred {} actual {}".format(pred_thres.item(), thres.item()))
             diff = pred_thres - thres
             abs_error_sum += torch.abs(pred_thres - thres)
             errors.append(diff.item())
