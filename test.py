@@ -42,7 +42,7 @@ if torch.cuda.is_available():
         torch.cuda.set_device(int(args.device.split(":")[1]))
         args.device = torch.device(args.device)
     else:
-        args.device = torch.device('cuda')
+        args.device = torch.device('cpu')
 
 else:
     args.device = torch.device('cpu')
