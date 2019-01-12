@@ -96,9 +96,9 @@ def train(epoch):
             optim.zero_grad()
             queries, thres = batch
             scores = model(queries.to(args.device))
-            print(scores, thres)
+            #print(scores, thres)
             loss = loss_func(scores, thres)
-            print(loss)
+            # print(loss)
             writer.add_scalar('loss/total', loss.item(), batch_num)
             losses.append(loss.item())
             loss.backward()
@@ -117,16 +117,14 @@ def train(epoch):
 def evaluate(eval_data):
     with torch.no_grad():
         model.eval()
-        abs_error_sum = 0
         errors = []
         for qry, thres in eval_data:
             qry = qry.view(1, qry.size(0), qry.size(1))
             pred_thres = model(qry.to(args.device))
-            print("pred {} actual {}".format(pred_thres.item(), thres.item()))
+            #print("pred {} actual {}".format(pred_thres.item(), thres.item()))
             diff = pred_thres - thres
-            abs_error_sum += torch.abs(pred_thres - thres)
             errors.append(diff.item())
-        return abs_error_sum.item(), errors
+        return errors
 
 
 # # Loop over epochs.
@@ -139,13 +137,12 @@ try:
         epoch_start_time = time.time()
         my_print("start epoch {}/{}".format(epoch, args.epochs))
         train(epoch)
-        abs_error_sum, errors = evaluate(dev_dataset)
-        writer.add_scalar('eval/abs_error_sum', abs_error_sum, epoch)
+        errors = evaluate(dev_dataset)
         val_mean_error = np.mean(np.asarray(errors))
         writer.add_histogram('eval/errors', np.asarray(errors), epoch)
         writer.add_scalar('eval/mean_error', val_mean_error, epoch)
         my_print('-' * 89)
-        my_print("epoch {} val val_mean_error {}".format(epoch, val_mean_error))
+        my_print("epoch {} val mean_error {}".format(epoch, val_mean_error))
         my_print("epoch {} errors {}".format(epoch, errors[:10]))
         my_print('-' * 89)
         # Save the model if the validation loss is the best we've seen so far.
