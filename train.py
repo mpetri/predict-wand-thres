@@ -85,10 +85,12 @@ writer = SummaryWriter(args.output_prefix + "/runs/" + create_file_name(args))
 
 huber_loss = nn.SmoothL1Loss()
 
+quantiles = hyperparams.quantiles.to(args.device)
+
 
 def quantile_loss(x, y):
     diff = x - y
-    loss = huber_loss(x, y) * (hyperparams.quantiles -
+    loss = huber_loss(x, y) * (quantiles -
                                (diff.detach() < 0).float()).abs()
     loss = loss.mean()
     return loss
