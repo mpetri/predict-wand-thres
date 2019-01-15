@@ -1,3 +1,6 @@
+*.csv
+*.log
+*.model
 *.tf
 *.local
 *tfevents*

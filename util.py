@@ -12,7 +12,7 @@ def print_to_string(*args, **kwargs):
 
 
 def create_file_name(args):
-    file_name = "BATCH{}-EPOCH{}-LR{}-LAYERS{}-EMBED{}-LOSS-Q".format(args.batch_size,
+    file_name = "BATCH{}-EPOCH{}-LR{}-LAYERS{}-EMBED{}-LOSS-Q{}".format(args.batch_size,
                                                                       args.epochs,
                                                                       args.lr,
                                                                       args.layers,

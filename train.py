@@ -83,16 +83,24 @@ my_print(model)
 
 writer = SummaryWriter(args.output_prefix + "/runs/" + create_file_name(args))
 
-huber_loss = nn.SmoothL1Loss()
+huber_loss = nn.SmoothL1Loss(reduce=False)
 
 quantiles = torch.tensor([[args.quantile]]).view(1, -1).to(args.device)
 
 
 def quantile_loss(x, y):
     diff = x - y
+    #my_print("x",x)
+    #my_print("y",y)
+    #my_print("diff",diff)
+    #my_print("quantile",quantiles)
+    #my_print("huber loss",huber_loss(x,y))
+    #my_print("q - I(d<0)",( quantiles - (diff.detach() < 0).float()))
+    #my_print("abs(q - I(d<0))",( quantiles - (diff.detach() < 0).float()).abs())
     loss = huber_loss(x, y) * (quantiles -
                                (diff.detach() < 0).float()).abs()
-    loss = loss.mean()
+    #my_print("loss",loss)
+    loss = loss.mean().abs()
     return loss
 
 
@@ -101,9 +109,6 @@ def train(epoch):
     optim = torch.optim.Adam(model.parameters(), lr=lr)
     my_print("epoch {} start training {} instances with lr {}".format(
         epoch, len(dataset), lr))
-
-    if args.mse == True:
-        loss_func = nn.MSELoss()
 
     with tqdm(total=len(dataloader), unit='batches', desc='train') as pbar:
         losses = []
@@ -153,7 +158,7 @@ try:
         my_print("start epoch {}/{}".format(epoch, args.epochs))
         train(epoch)
         errors = evaluate(dev_dataset)
-        val_mean_error = np.mean(np.asarray(errors))
+        val_mean_error = np.abs(np.mean(np.asarray(errors)))
         writer.add_histogram('eval/errors', np.asarray(errors), epoch)
         writer.add_scalar('eval/mean_error', val_mean_error, epoch)
         my_print('-' * 89)
