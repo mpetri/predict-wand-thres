@@ -23,7 +23,7 @@ def create_file_name(args):
 
 def init_log(args):
     file_name = create_file_name(args)
-    log_file = args.output_prefix + "/" + file_name + ".log"
+    log_file = args.data_dir + "/models/" + file_name + ".log"
     print("Writing log to file", log_file, flush=True)
     logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO,
                         datefmt='%m/%d/%Y %H:%M:%S', filename=log_file)
