@@ -85,7 +85,7 @@ my_print(model)
 
 writer = SummaryWriter(output_prefix + "/runs/" + create_file_name(args))
 
-huber_loss = nn.SmoothL1Loss(reduce=False)
+huber_loss = nn.SmoothL1Loss(reduction='none')
 
 quantiles = torch.tensor([[args.quantile]]).view(1, -1).to(args.device)
 

@@ -4,7 +4,7 @@ INPUT_FILE=$1
 COL_DIR=$2
 
 echo "create col dir $COL_DIR"
-mkdir -p $COL_DIR
+mkdir -p $COL_DIR/models/
 
 echo "copy input to dir $COL_DIR"
 cp $INPUT_FILE $COL_DIR/raw_input.json
