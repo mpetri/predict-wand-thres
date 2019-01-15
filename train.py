@@ -20,11 +20,7 @@ import os
 from tensorboardX import SummaryWriter
 
 parser = argparse.ArgumentParser(description='PyTorch WAND Thres predictor')
-parser.add_argument('--queries', type=str, required=True, help='query data')
-parser.add_argument('--dev_queries', type=str,
-                    required=True, help='dev query data')
-parser.add_argument('--test_queries', type=str,
-                    required=False, help='test query data')
+parser.add_argument('--data_dir', type=str, required=True, help='query data dir')
 parser.add_argument('--batch_size', type=int,
                     default=hyperparams.default_batch_size, help='batch size')
 parser.add_argument('--clip', type=float,
@@ -37,8 +33,6 @@ parser.add_argument('--layers', type=int,
                     default=hyperparams.default_num_layers, help='number of layers')
 parser.add_argument('--epochs', default=hyperparams.default_epochs,
                     type=int, required=False, help='training epochs')
-parser.add_argument('--output_prefix', default="./",
-                    type=str, required=False, help='output prefix')
 parser.add_argument('--quantile', type=float,
                     default=0.5, help='quantile')
 parser.add_argument('--device', default="cpu", type=str,
@@ -67,21 +61,26 @@ else:
     args.device = torch.device('cpu')
 my_print("Using torch device:", args.device)
 
-dataset = data_loader.InvertedIndexData(args, args.queries)
-dev_dataset = data_loader.InvertedIndexData(args, args.dev_queries)
+train_file = args.data_dir + "/train.json"
+dev_file = args.data_dir + "/dev.json"
+
+dataset = data_loader.InvertedIndexData(args, train_file)
+dev_dataset = data_loader.InvertedIndexData(args, dev_file)
 
 dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
+
+output_prefix = args.data_dir + "/models/"
 
 # ###############################################################################
 # # Build the model
 # ###############################################################################
-model_file = args.output_prefix + "/" + create_file_name(args) + ".model"
+model_file = output_prefix + "/" + create_file_name(args) + ".model"
 my_print("Writing model to file", model_file)
 model = models.Simple(args.embed_size)
 model = model.to(device=args.device)
 my_print(model)
 
-writer = SummaryWriter(args.output_prefix + "/runs/" + create_file_name(args))
+writer = SummaryWriter(output_prefix + "/runs/" + create_file_name(args))
 
 huber_loss = nn.SmoothL1Loss(reduce=False)
 
@@ -90,16 +89,8 @@ quantiles = torch.tensor([[args.quantile]]).view(1, -1).to(args.device)
 
 def quantile_loss(x, y):
     diff = x - y
-    #my_print("x",x)
-    #my_print("y",y)
-    #my_print("diff",diff)
-    #my_print("quantile",quantiles)
-    #my_print("huber loss",huber_loss(x,y))
-    #my_print("q - I(d<0)",( quantiles - (diff.detach() < 0).float()))
-    #my_print("abs(q - I(d<0))",( quantiles - (diff.detach() < 0).float()).abs())
     loss = huber_loss(x, y) * (quantiles -
                                (diff.detach() < 0).float()).abs()
-    #my_print("loss",loss)
     loss = loss.mean().abs()
     return loss
 
@@ -116,9 +107,7 @@ def train(epoch):
             optim.zero_grad()
             queries, thres = batch
             scores = model(queries.to(args.device))
-            #print(scores, thres)
             loss = quantile_loss(scores, thres)
-            # print(loss)
             writer.add_scalar('loss/total', loss.item(), batch_num)
             losses.append(loss.item())
             loss.backward()
@@ -141,7 +130,6 @@ def evaluate(eval_data):
         for qry, thres in eval_data:
             qry = qry.view(1, qry.size(0), qry.size(1))
             pred_thres = model(qry.to(args.device))
-            #print("pred {} actual {}".format(pred_thres.item(), thres.item()))
             diff = pred_thres - thres
             errors.append(diff.item())
         return errors

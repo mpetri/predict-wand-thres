@@ -23,11 +23,16 @@ from typing import List
 class Term:
     id: float
     wand_upper: float
+    q_weight: float
     Ft: float
     mean_ft: float
     med_ft: float
     min_ft: float
     max_ft: float
+    mean_doclen: float
+    med_doclen: float
+    min_doclen: float
+    max_doclen: float
     num_ft_geq_256: float
     num_ft_geq_128: float
     num_ft_geq_64: float
@@ -82,30 +87,43 @@ def create_tensors(queries, dev):
         for tidx, t in enumerate(q.term_data):
             qry[qidx, tidx, 0] = bucketize(
                 t.wand_upper, hyperparams.const_score_buckets)
-            qry[qidx, tidx, 1] = bucketize(t.Ft, hyperparams.const_Ft_buckets)
-            qry[qidx, tidx, 2] = bucketize(
-                t.mean_ft, hyperparams.const_freq_buckets)
+            qry[qidx, tidx, 1] = bucketize(
+                t.q_weight, hyperparams.const_score_buckets)
+                
+            qry[qidx, tidx, 2] = bucketize(t.Ft, hyperparams.const_Ft_buckets)
             qry[qidx, tidx, 3] = bucketize(
-                t.med_ft, hyperparams.const_freq_buckets)
+                t.mean_ft, hyperparams.const_freq_buckets)
             qry[qidx, tidx, 4] = bucketize(
-                t.min_ft, hyperparams.const_freq_buckets)
+                t.med_ft, hyperparams.const_freq_buckets)
             qry[qidx, tidx, 5] = bucketize(
-                t.max_ft, hyperparams.const_freq_buckets)
+                t.min_ft, hyperparams.const_freq_buckets)
             qry[qidx, tidx, 6] = bucketize(
-                t.num_ft_geq_256, hyperparams.const_Ft_buckets)
+                t.max_ft, hyperparams.const_freq_buckets)
+
             qry[qidx, tidx, 7] = bucketize(
-                t.num_ft_geq_128, hyperparams.const_Ft_buckets)
+                t.mean_ft, hyperparams.const_doc_len_buckets)
             qry[qidx, tidx, 8] = bucketize(
-                t.num_ft_geq_64, hyperparams.const_Ft_buckets)
+                t.med_ft, hyperparams.const_doc_len_buckets)
             qry[qidx, tidx, 9] = bucketize(
-                t.num_ft_geq_32, hyperparams.const_Ft_buckets)
+                t.min_ft, hyperparams.const_doc_len_buckets)
             qry[qidx, tidx, 10] = bucketize(
-                t.num_ft_geq_16, hyperparams.const_Ft_buckets)
+                t.max_ft, hyperparams.const_doc_len_buckets)
+
             qry[qidx, tidx, 11] = bucketize(
-                t.num_ft_geq_8, hyperparams.const_Ft_buckets)
+                t.num_ft_geq_256, hyperparams.const_Ft_buckets)
             qry[qidx, tidx, 12] = bucketize(
-                t.num_ft_geq_4, hyperparams.const_Ft_buckets)
+                t.num_ft_geq_128, hyperparams.const_Ft_buckets)
             qry[qidx, tidx, 13] = bucketize(
+                t.num_ft_geq_64, hyperparams.const_Ft_buckets)
+            qry[qidx, tidx, 14] = bucketize(
+                t.num_ft_geq_32, hyperparams.const_Ft_buckets)
+            qry[qidx, tidx, 15] = bucketize(
+                t.num_ft_geq_16, hyperparams.const_Ft_buckets)
+            qry[qidx, tidx, 16] = bucketize(
+                t.num_ft_geq_8, hyperparams.const_Ft_buckets)
+            qry[qidx, tidx, 17] = bucketize(
+                t.num_ft_geq_4, hyperparams.const_Ft_buckets)
+            qry[qidx, tidx, 18] = bucketize(
                 t.num_ft_geq_2, hyperparams.const_Ft_buckets)
     return qry
 
