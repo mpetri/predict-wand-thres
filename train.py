@@ -37,6 +37,7 @@ parser.add_argument('--quantile', type=float,
                     default=0.5, help='quantile')
 parser.add_argument('--device', default="cpu", type=str,
                     required=False, help='compute device')
+parser.add_argument('--debug',default=False, dest='debug', action='store_true')
 args = parser.parse_args()
 init_log(args)
 torch.set_num_threads(hyperparams.default_threads)
@@ -62,6 +63,8 @@ else:
 my_print("Using torch device:", args.device)
 
 train_file = args.data_dir + "/train.json"
+if args.debug == True:
+    train_file = args.data_dir + "/debug.json"
 dev_file = args.data_dir + "/dev.json"
 
 dataset = data_loader.InvertedIndexData(args, train_file)
