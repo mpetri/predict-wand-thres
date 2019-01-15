@@ -83,7 +83,7 @@ def bucketize(number, bucket_boundaries):
 def create_tensors(queries, dev):
     qry = torch.zeros(len(queries), hyperparams.default_max_qry_len,
                       hyperparams.num_term_params, requires_grad=False, device=dev, dtype=torch.long)
-    for qidx, q in enumerate(queries):
+    for qidx, q in enumerate(tqdm(queries, desc="bucketize qrys", unit="qrys")):
         for tidx, t in enumerate(q.term_data):
             qry[qidx, tidx, 0] = bucketize(
                 t.wand_upper, hyperparams.const_score_buckets)
