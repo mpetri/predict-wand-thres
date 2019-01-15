@@ -25,12 +25,16 @@ tail -n $NUM_TEST $COL_DIR/dev_and_test.json > $COL_DIR/test.json
 
 head -n -$NUM_DEV_AND_TEST $COL_DIR/shuf_input.json > $COL_DIR/train.json
 
-NUM_QUERIES$(wc -l $COL_DIR/shuf_input.json)
+head -n 5000 $COL_DIR/shuf_input.json > $COL_DIR/debug.json
+
+NUM_QUERIES=$(wc -l $COL_DIR/shuf_input.json)
 NUM_TRAIN=$(wc -l $COL_DIR/train.json)
 NUM_DEV=$(wc -l $COL_DIR/dev.json)
 NUM_TEST=$(wc -l $COL_DIR/test.json)
+NUM_DEBUG=$(wc -l $COL_DIR/debug.json)
 
 echo "NUM QUERIES = $NUM_QUERIES"
 echo "NUM TRAIN = $NUM_TRAIN"
 echo "NUM DEV = $NUM_DEV"
 echo "NUM TEST = $NUM_TEST"
+echo "NUM DEBUG = $NUM_DEBUG"

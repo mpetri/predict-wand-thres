@@ -1,6 +1,12 @@
 #!/bin/bash
 
-DEVICE=$1
-QUANT=$2
+COL=$1
+DEVICE=$2
 
-python ../train.py --queries ../data/gov2_new/train-5k.json --dev_queries ../data/gov2_new/dev.json --device $1 --layers 2 --embed_size 32 --quantile $2
+python ../train.py --data_dir $COL \ 
+                   --device $DEVICE \
+                   --layers 2 \
+                   --embed_size 32 \
+                   --batch_size 1 \
+                   --debug \
+                   --quantile 0.99
