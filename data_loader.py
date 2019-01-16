@@ -240,10 +240,10 @@ def create_tensors_from_np(queries, dev):
         qry[idx,:] = torch.as_tensor(q)
     return qry
 
-def create_thresholds(thres, dev):
+def create_thresholds(thres_lst, dev):
     thres = torch.zeros(len(thres), 1, requires_grad=False,
                         device=dev, dtype=torch.float)
-    for qidx, t in enumerate(thres):
+    for qidx, t in enumerate(thres_lst):
         thres[qidx] = t
     return thres
 
