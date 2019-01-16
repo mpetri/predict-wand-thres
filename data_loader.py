@@ -235,8 +235,7 @@ def create_tensors(queries, dev):
     return qry
 
 def create_tensors_from_np(queries, dev):
-    qry = torch.zeros(len(queries), hyperparams.default_max_qry_len,
-                      hyperparams.num_term_params, requires_grad=False, device=dev, dtype=torch.long)
+    qry = torch.zeros(len(queries), hyperparams.default_max_qry_len * hyperparams.num_term_params, requires_grad=False, device=dev, dtype=torch.long)
     for idx,q in enumerate(queries):
         qry[idx,:] = torch.as_tensor(q)
     return qry
