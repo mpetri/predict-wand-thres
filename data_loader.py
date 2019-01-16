@@ -9,6 +9,7 @@ import array
 from util import my_print
 import collections
 import hyperparams
+import rapidjson
 
 from dataclasses import dataclass, field
 
