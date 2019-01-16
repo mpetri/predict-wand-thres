@@ -77,7 +77,7 @@ output_prefix = args.data_dir + "/models/"
 # ###############################################################################
 model_file = output_prefix + "/" + create_file_name(args) + ".model"
 my_print("Writing model to file", model_file)
-model = models.Simple(args.layers)
+model = models.MLP(args.layers)
 model = model.to(device=args.device)
 my_print(model)
 
