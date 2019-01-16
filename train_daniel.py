@@ -24,9 +24,12 @@ from dataclasses_json import dataclass_json
 
 parser = argparse.ArgumentParser(description='PyTorch WAND Thres predictor')
 parser.add_argument('--data_dir', type=str, required=True, help='query data dir')
+parser.add_argument('--debug',default=False, dest='debug', action='store_true')
 args = parser.parse_args()
 
 train_file = args.data_dir + "/train.json"
+if args.debug == True:
+    train_file = args.data_dir + "/debug.json"
 dev_file = args.data_dir + "/dev.json"
 test_file = args.data_dir + "/test.json"
 
@@ -66,7 +69,7 @@ class Query:
 
 def query_to_np(query):
     qry_np = np.zeros(hyperparams.default_max_qry_len*hyperparams.num_term_params)
-    for idx,t in enumerate(tqdm(query.term_data,desc="qry2np",unit="qrys")):
+    for idx,t in enumerate(query.term_data):
         qry_np[idx*hyperparams.num_term_params+0] = t.wand_upper
         qry_np[idx*hyperparams.num_term_params+1] = t.q_weight
         qry_np[idx*hyperparams.num_term_params+2] = t.Ft
