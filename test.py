@@ -57,12 +57,16 @@ with torch.no_grad():
         model.eval()
         print("id;predicted;actual;time_ms")
         total_time_ms = 0
+        error_sum = 0.0
         for qry, thres in dataset:
             qry = qry.view(1, qry.size(0))
             start = time.time()
             pred_thres = model(qry.to(args.device))
             elapsed = time.time() - start
             total_time_ms += elapsed * 1000
+            error_sum += np.abs(pred_thres.item()-thres.item())
             print("{};{};{}".format(pred_thres.item(),thres.item(), elapsed * 1000))
         print("mean time per qry {}".format(
             float(total_time_ms) / float(len(dataset))), file=sys.stderr)
+        print("mean absolute error {}".format(
+            float(error_sum) / float(len(dataset))), file=sys.stderr)
