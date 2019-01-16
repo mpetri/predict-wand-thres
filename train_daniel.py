@@ -64,6 +64,30 @@ class Query:
     term_data: List[Term] = field(default_factory=list)
 
 
+def query_to_np(query):
+    qry_np = np.zeros(hyperparams.default_max_qry_len*hyperparams.num_term_params)
+    for idx,t in enumerate(tqdm(query.term_data,desc="qry2np",unit="qrys")):
+        qry_np[idx*hyperparams.num_term_params+0] = t.wand_upper
+        qry_np[idx*hyperparams.num_term_params+1] = t.q_weight
+        qry_np[idx*hyperparams.num_term_params+2] = t.Ft
+        qry_np[idx*hyperparams.num_term_params+3] = t.mean_ft
+        qry_np[idx*hyperparams.num_term_params+4] = t.med_ft
+        qry_np[idx*hyperparams.num_term_params+5] = t.min_ft
+        qry_np[idx*hyperparams.num_term_params+6] = t.max_ft
+        qry_np[idx*hyperparams.num_term_params+7] = t.mean_doclen
+        qry_np[idx*hyperparams.num_term_params+8] = t.med_doclen
+        qry_np[idx*hyperparams.num_term_params+9] = t.min_doclen
+        qry_np[idx*hyperparams.num_term_params+10] = t.max_doclen
+        qry_np[idx*hyperparams.num_term_params+11] = t.num_ft_geq_256
+        qry_np[idx*hyperparams.num_term_params+12] = t.num_ft_geq_128
+        qry_np[idx*hyperparams.num_term_params+13] = t.num_ft_geq_64
+        qry_np[idx*hyperparams.num_term_params+14] = t.num_ft_geq_32
+        qry_np[idx*hyperparams.num_term_params+15] = t.num_ft_geq_16
+        qry_np[idx*hyperparams.num_term_params+16] = t.num_ft_geq_8
+        qry_np[idx*hyperparams.num_term_params+17] = t.num_ft_geq_4
+        qry_np[idx*hyperparams.num_term_params+18] = t.num_ft_geq_2
+
+
 def read_queries(query_file):
     ### read query file ###
     queries = []
@@ -75,7 +99,8 @@ def read_queries(query_file):
             total += 1
             new_query = Query.from_json(line)
             if len(new_query.term_ids) <= hyperparams.default_max_qry_len:
-                queries.append(new_query)
+                q_np = query_to_np(new_query)
+                queries.append(q_np)
             else:
                 skipped += 1
 
