@@ -89,7 +89,7 @@ def query_to_np(query):
         qry_np[idx*hyperparams.num_term_params+16] = t.num_ft_geq_8
         qry_np[idx*hyperparams.num_term_params+17] = t.num_ft_geq_4
         qry_np[idx*hyperparams.num_term_params+18] = t.num_ft_geq_2
-
+    return qry_np
 
 def read_queries_and_thres(query_file):
     ### read query file ###
