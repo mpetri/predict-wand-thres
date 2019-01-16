@@ -25,13 +25,9 @@ parser = argparse.ArgumentParser(description='PyTorch WAND Thres predictor')
 parser.add_argument('--data_dir', type=str, required=True, help='query data dir')
 args = parser.parse_args()
 
-
 train_file = args.data_dir + "/train.json"
-if args.debug == True:
-    train_file = args.data_dir + "/debug.json"
 dev_file = args.data_dir + "/dev.json"
 test_file = args.data_dir + "/test.json"
-
 
 @dataclass_json
 @dataclass(frozen=True)
