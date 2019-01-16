@@ -27,8 +27,6 @@ parser.add_argument('--clip', type=float,
                     default=hyperparams.default_gradient_clipping, help='gradient clipping')
 parser.add_argument('--lr', type=float,
                     default=hyperparams.default_learning_rate, help='initial learning rate')
-parser.add_argument('--embed_size', type=int,
-                    default=hyperparams.default_embed_size, help='embedding size')
 parser.add_argument('--layers', type=int,
                     default=hyperparams.default_num_layers, help='number of layers')
 parser.add_argument('--epochs', default=hyperparams.default_epochs,
