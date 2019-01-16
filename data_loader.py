@@ -168,7 +168,7 @@ def read_queries_and_thres(query_file, data_size=5000):
                 thres_10.append(new_query.wand_thres_10)
                 thres_100.append(new_query.wand_thres_100)
                 thres_1000.append(new_query.wand_thres_1000)
-                if data_size != 0 && len(thres_10) > data_size:
+                if data_size != 0 and len(thres_10) > data_size:
                     break
             else:
                 skipped += 1
