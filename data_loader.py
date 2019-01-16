@@ -241,7 +241,7 @@ def create_tensors_from_np(queries, dev):
     return qry
 
 def create_thresholds(thres_lst, dev):
-    thres = torch.zeros(len(thres), 1, requires_grad=False,
+    thres = torch.zeros(len(thres_lst), 1, requires_grad=False,
                         device=dev, dtype=torch.float)
     for qidx, t in enumerate(thres_lst):
         thres[qidx] = t
