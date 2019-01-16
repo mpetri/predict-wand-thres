@@ -163,7 +163,7 @@ def read_queries_and_thres(query_file, data_size=5000):
                     new_term.block_score_4096 = t["block_score_4096"]
                     new_term.block_score_small = t["block_score_small"]
 
-                    new_query.term_data.append(t)
+                    new_query.term_data.append(new_term)
                 q_np = query_to_np(new_query)
                 queries.append(q_np)
                 thres_10.append(new_query.wand_thres_10)
