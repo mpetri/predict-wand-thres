@@ -252,7 +252,7 @@ def create_thresholds(queries, dev):
 class InvertedIndexData(Dataset):
     def __init__(self, args, qry_file):
         self.queries,self.thres_10,self.thres_100,self.thres_1000 = read_queries_and_thres(qry_file,0)
-        self.tensor_queries = create_tensors(self.queries, args.device)
+        self.tensor_queries = create_tensors_from_np(self.queries, args.device)
         self.tensor_thres = create_thresholds(self.thres_10, args.device)
 
         my_print("dataset statistics:", qry_file)
