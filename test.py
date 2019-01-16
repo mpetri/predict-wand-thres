@@ -55,7 +55,7 @@ with torch.no_grad():
         model = torch.load(f, map_location=args.device)
         print(model)
         model.eval()
-        print("predicted;actual;time_ms")
+        print("id;predicted;actual;time_ms")
         total_time_ms = 0
         for qry, thres in dataset:
             qry = qry.view(1, qry.size(0), qry.size(1))
@@ -63,7 +63,7 @@ with torch.no_grad():
             pred_thres = model(qry.to(args.device))
             elapsed = time.time() - start
             total_time_ms += elapsed * 1000
-            print("{};{};{}".format(pred_thres.item(),
+            print("{};{};{};{}".format(qry.id,pred_thres.item(),
                                     thres.item(), elapsed * 1000))
         print("mean time per qry {}".format(
             float(total_time_ms) / float(len(dataset))), file=sys.stderr)
