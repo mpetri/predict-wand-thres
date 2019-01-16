@@ -73,5 +73,5 @@ with torch.no_grad():
             float(total_time_ms) / float(len(dataset))), file=sys.stderr)
         print("mean absolute error {}".format(
             float(error_sum) / float(len(dataset))), file=sys.stderr)
-        print("over predicted thresholds {} ({.2f})".format(num_over_predicted,
+        print("over predicted thresholds {} ({:.2f})".format(num_over_predicted,
             float(num_over_predicted*100) / float(len(dataset))), file=sys.stderr)
