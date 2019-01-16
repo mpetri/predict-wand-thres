@@ -109,9 +109,9 @@ def read_queries_and_thres(query_file):
     print("skipped queries {} out of {}".format(skipped, total))
     return queries,thres
 
-queries = read_queries(train_file)
+queries,thres = read_queries_and_thres(train_file)
 
-for q in queries:
-    print(q)
+for q,t in zip(queries,thres):
+    print("q {} thres {}".format(q,t))
 
 
