@@ -58,7 +58,7 @@ with torch.no_grad():
         print("id;predicted;actual;time_ms")
         total_time_ms = 0
         for qry, thres in dataset:
-            qry = qry.view(1, qry.size(0), qry.size(1))
+            qry = qry.view(1, qry.size(0))
             start = time.time()
             pred_thres = model(qry.to(args.device))
             elapsed = time.time() - start
