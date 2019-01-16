@@ -118,3 +118,8 @@ for q,t in zip(queries,thres):
     print("q {} thres {}".format(q,t))
 
 
+test_queries,test_thres = read_queries_and_thres(test_file)
+
+for q,t in zip(test_queries,test_thres):
+    print("q {} thres {}".format(q,t))
+
