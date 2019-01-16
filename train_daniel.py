@@ -88,9 +88,10 @@ def query_to_np(query):
         qry_np[idx*hyperparams.num_term_params+18] = t.num_ft_geq_2
 
 
-def read_queries(query_file):
+def read_queries_and_thres(query_file):
     ### read query file ###
     queries = []
+    thres = []
     skipped = 0
     total = 0
     with open(query_file) as fp:
@@ -101,11 +102,12 @@ def read_queries(query_file):
             if len(new_query.term_ids) <= hyperparams.default_max_qry_len:
                 q_np = query_to_np(new_query)
                 queries.append(q_np)
+                thres.append(new_query.wand_thres)
             else:
                 skipped += 1
 
     print("skipped queries {} out of {}".format(skipped, total))
-    return queries
+    return queries,thres
 
 queries = read_queries(train_file)
 
