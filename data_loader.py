@@ -161,7 +161,7 @@ def read_queries_and_thres(query_file, data_size=5000):
                     new_term.block_score_1024 = float(t["block_score_1024"])
                     new_term.block_score_2048 = float(t["block_score_2048"])
                     new_term.block_score_4096 = float(t["block_score_4096"])
-                    new_term.block_score_small = float(t["block_score_small"]v
+                    new_term.block_score_small = float(t["block_score_small"])
 
                     new_query.term_data.append(new_term)
                 q_np = query_to_np(new_query)
