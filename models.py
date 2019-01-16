@@ -9,7 +9,7 @@ from util import my_print
 import torch.nn.functional as F
 
 
-class Simple(nn.Module):
+class Complex(nn.Module):
     def __init__(self, embed_size, num_layers=hyperparams.default_num_layers):
         super(Simple, self).__init__()
         my_print("Initializing Simple model")
@@ -95,3 +95,22 @@ class Simple(nn.Module):
         query_embed = query_embed.view(-1, self.input_dim)
         pred_thres = self.layers(query_embed)
         return pred_thres
+
+
+class Simple(nn.Module):
+    def __init__(self, embed_size, num_layers=hyperparams.default_num_layers):
+        super(Simple, self).__init__()
+        self.num_layers = num_layers
+        self.input_dim = hyperparams.default_max_qry_len * hyperparams.num_term_params
+        self.layers = torch.nn.Sequential()
+        for i in range(num_layers):
+            self.layers.add_module("linear_{}".format(
+                i + 1), nn.Linear(self.input_dim, self.input_dim))
+            self.layers.add_module("ReLU_{}".format(i + 1), nn.ReLU())
+        self.layers.add_module("last_linear", nn.Linear(self.input_dim, 1))
+
+    def forward(self, queries):
+        pred_thres = self.layers(queries)
+        return pred_thres
+
+
