@@ -10,7 +10,7 @@ echo "copy input to dir $COL_DIR"
 cp $INPUT_FILE $COL_DIR/raw_input.json
 
 echo "random shuffle input"
-sort -R $COL_DIR/raw_input.json > $COL_DIR/shuf_input.json
+shuf $COL_DIR/raw_input.json > $COL_DIR/shuf_input.json
 
 NUM_TEST=1000
 NUM_DEV=1000
