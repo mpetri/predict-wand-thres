@@ -111,6 +111,8 @@ def read_queries_and_thres(query_file, data_size=5000):
     thres_10 = []
     thres_100 = []
     thres_1000 = []
+    query_ids = []
+    query_term_ids = []
     skipped = 0
     total = 0
     with open(query_file) as fp:
@@ -173,13 +175,15 @@ def read_queries_and_thres(query_file, data_size=5000):
                 thres_10.append(new_query.wand_thres_10)
                 thres_100.append(new_query.wand_thres_100)
                 thres_1000.append(new_query.wand_thres_1000)
+                query_ids.append(new_query.id)
+                query_term_ids.append(new_query.term_ids)
                 if data_size != 0 and len(thres_10) > data_size:
                     break
             else:
                 skipped += 1
 
     print("skipped queries {} out of {}".format(skipped, total))
-    return queries, thres_10, thres_100, thres_1000
+    return queries, thres_10, thres_100, thres_1000, query_ids, query_term_ids
 
 
 def bucketize(number, bucket_boundaries):
