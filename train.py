@@ -89,7 +89,7 @@ writer = SummaryWriter(output_prefix + "/runs/" + create_file_name(args))
 
 huber_loss = nn.SmoothL1Loss(reduction='none')
 
-quantiles = torch.tensor([[args.quantile]]).view(1, -1).to(args.device)
+quantiles = torch.tensor([[args.quantile]]).view(1, -1).float().to(args.device)
 
 
 def quantile_loss(x, y):
@@ -101,8 +101,8 @@ def quantile_loss(x, y):
 
 
 def quantile_loss_eval(x, y):
-    x = torch.from_numpy(x).to(args.device)
-    y = torch.from_numpy(y).to(args.device)
+    x = torch.from_numpy(x).float().to(args.device)
+    y = torch.from_numpy(y).float().to(args.device)
     diff = x - y
     loss = huber_loss(x, y) * (quantiles -
                                (diff.detach() < 0).float()).abs()
