@@ -6,4 +6,5 @@ numpy
 torch
 matplotlib
 tensorboardX
-rapidjson
+python-rapidjson
+scikit-learn
