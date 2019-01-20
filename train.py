@@ -130,13 +130,15 @@ def train(epoch):
 def evaluate(eval_data):
     with torch.no_grad():
         model.eval()
-        errors = []
+        pred = []
+        actual = []
         for qry, thres in eval_data:
             qry = qry.view(1, qry.size(0))
             pred_thres = model(qry.to(args.device))
             diff = pred_thres - thres
-            errors.append(diff.item())
-        return errors
+            pred.append(pred_thres.item())
+            actual.append(thres.item())
+        return np.asarray(pred), np.asarray(actual)
 
 
 # # Loop over epochs.
@@ -149,19 +151,20 @@ try:
         epoch_start_time = time.time()
         my_print("start epoch {}/{}".format(epoch, args.epochs))
         train(epoch)
-        errors = evaluate(dev_dataset)
-        val_mean_error = np.abs(np.mean(np.asarray(errors)))
+        pred, actual = evaluate(dev_dataset)
+        MSE = mean_squared_error(actual, pred)
+        errors = pred - actual
         writer.add_histogram('eval/errors', np.asarray(errors), epoch)
-        writer.add_scalar('eval/mean_error', val_mean_error, epoch)
+        writer.add_scalar('eval/MSE', val_mean_error, epoch)
         my_print('-' * 89)
-        my_print("epoch {} val mean_error {}".format(epoch, val_mean_error))
+        my_print("epoch {} val MSE {}".format(epoch, MSE))
         my_print("epoch {} errors {}".format(epoch, errors[:10]))
         my_print('-' * 89)
         # Save the model if the validation loss is the best we've seen so far.
-        if not best_val_loss or val_mean_error < best_val_loss:
+        if not best_val_loss or MSE < best_val_loss:
             with open(model_file, 'wb') as f:
                 torch.save(model, f)
-            best_val_loss = val_mean_error
+            best_val_loss = MSE
 
 except KeyboardInterrupt:
     my_print('-' * 89)
