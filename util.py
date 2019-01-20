@@ -12,11 +12,12 @@ def print_to_string(*args, **kwargs):
 
 
 def create_file_name(args):
-    file_name = "BATCH{}-EPOCH{}-LR{}-LAYERS{}-LOSS-Q{}".format(args.batch_size,
-                                                                      args.epochs,
-                                                                      args.lr,
-                                                                      args.layers,
-                                                                      args.quantile)
+    file_name = "BATCH{}-EPOCH{}-LR{}-LAYERS{}-LOSS-Q{}-K{}".format(args.batch_size,
+                                                                    args.epochs,
+                                                                    args.lr,
+                                                                    args.layers,
+                                                                    args.quantile,
+                                                                    args.k)
     return file_name
 
 

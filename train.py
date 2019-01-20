@@ -100,6 +100,14 @@ def quantile_loss(x, y):
     return loss
 
 
+def quantile_loss_eval(x, y):
+    diff = torch.from_np(x) - torch.from_np(y)
+    loss = huber_loss(x, y) * (quantiles -
+                               (diff.detach() < 0).float()).abs()
+    loss = loss.mean().abs()
+    return loss
+
+
 def train(epoch):
     model.train()
     optim = torch.optim.Adam(model.parameters(), lr=lr)
@@ -153,19 +161,19 @@ try:
         my_print("start epoch {}/{}".format(epoch, args.epochs))
         train(epoch)
         pred, actual = evaluate(dev_dataset)
-        MSE = mean_squared_error(actual, pred)
+        q_eval_loss = quantile_loss_eval(actual, pred)
         errors = pred - actual
         writer.add_histogram('eval/errors', np.asarray(errors), epoch)
-        writer.add_scalar('eval/MSE', MSE, epoch)
+        writer.add_scalar('eval/q_eval_loss', q_eval_loss, epoch)
         my_print('-' * 89)
-        my_print("epoch {} val MSE {}".format(epoch, MSE))
+        my_print("epoch {} val q_eval_loss {}".format(epoch, q_eval_loss))
         my_print("epoch {} errors {}".format(epoch, errors[:10]))
         my_print('-' * 89)
         # Save the model if the validation loss is the best we've seen so far.
-        if not best_val_loss or MSE < best_val_loss:
+        if not best_val_loss or q_eval_loss < best_val_loss:
             with open(model_file, 'wb') as f:
                 torch.save(model, f)
-            best_val_loss = MSE
+            best_val_loss = q_eval_loss
 
 except KeyboardInterrupt:
     my_print('-' * 89)
