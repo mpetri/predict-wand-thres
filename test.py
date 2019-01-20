@@ -57,11 +57,11 @@ with torch.no_grad():
         model = torch.load(f, map_location=args.device)
         print(model)
         model.eval()
-        print("id;predicted;actual;time_ms")
         total_time_ms = 0
         error_sum = 0.0
         num_over_predicted = 0
         preds = []
+        under_preds = []
         actual = []
         for qry, thres in dataset:
             qry = qry.view(1, qry.size(0))
@@ -72,11 +72,15 @@ with torch.no_grad():
             if pred_thres.item() - thres.item() > 0:
                 num_over_predicted += 1
 
+            if thres.item() >= pred_thres.item():
+                under_preds.append(thres.item() - pred_thres.item())
+
             preds.append(pred_thres.item())
             actual.append(thres.item())
 
+        MUE = np.mean(np.asarray(under_preds))
         MSE = mean_squared_error(actual, preds)
         RHO = pearsonr(actual, preds)
         percent_over = float(num_over_predicted * 100) / float(len(dataset))
-        print("MODEL {} MSE {} RHO {} OVER% {}".format(
-            args.model, MSE, RHO, percent_over))
+        print("MODEL {} MUE {} MSE {} RHO {} OVER% {}".format(
+            args.model, MUE, MSE, RHO, percent_over))
