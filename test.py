@@ -19,6 +19,8 @@ import models
 import os
 import sys
 from tensorboardX import SummaryWriter
+from sklearn.metrics import mean_squared_error
+from scipy.stats import pearsonr
 
 parser = argparse.ArgumentParser(description='PyTorch WAND Thres predictor')
 parser.add_argument('--queries', type=str, required=True, help='query data')
@@ -59,19 +61,22 @@ with torch.no_grad():
         total_time_ms = 0
         error_sum = 0.0
         num_over_predicted = 0
+        preds = []
+        actual = []
         for qry, thres in dataset:
             qry = qry.view(1, qry.size(0))
             start = time.time()
             pred_thres = model(qry.to(args.device))
             elapsed = time.time() - start
             total_time_ms += elapsed * 1000
-            if pred_thres.item()-thres.item() > 0:
+            if pred_thres.item() - thres.item() > 0:
                 num_over_predicted += 1
-            error_sum += np.abs(pred_thres.item()-thres.item())
-            print("{};{};{}".format(pred_thres.item(),thres.item(), elapsed * 1000))
-        print("mean time per qry {}".format(
-            float(total_time_ms) / float(len(dataset))), file=sys.stderr)
-        print("mean absolute error {}".format(
-            float(error_sum) / float(len(dataset))), file=sys.stderr)
-        print("over predicted thresholds {} ({:.2f}%)".format(num_over_predicted,
-            float(num_over_predicted*100) / float(len(dataset))), file=sys.stderr)
+
+            preds.append(pred_thres.item())
+            actual.append(thres.item())
+
+        MSE = mean_squared_error(actual, preds)
+        RHO = pearsonr(actual, preds)
+        percent_over = float(num_over_predicted * 100) / float(len(dataset))
+        print("MODEL {} MSE {} RHO {} OVER% {}".format(
+            args.model, MSE, RHO, percent_over))
