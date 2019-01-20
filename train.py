@@ -155,7 +155,7 @@ try:
         MSE = mean_squared_error(actual, pred)
         errors = pred - actual
         writer.add_histogram('eval/errors', np.asarray(errors), epoch)
-        writer.add_scalar('eval/MSE', val_mean_error, epoch)
+        writer.add_scalar('eval/MSE', MSE, epoch)
         my_print('-' * 89)
         my_print("epoch {} val MSE {}".format(epoch, MSE))
         my_print("epoch {} errors {}".format(epoch, errors[:10]))
