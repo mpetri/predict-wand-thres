@@ -101,8 +101,8 @@ def quantile_loss(x, y):
 
 
 def quantile_loss_eval(x, y):
-    x = torch.from_numpy(x)
-    y = torch.from_numpy(y)
+    x = torch.from_numpy(x).to(args.device)
+    y = torch.from_numpy(y).to(args.device)
     diff = x - y
     loss = huber_loss(x, y) * (quantiles -
                                (diff.detach() < 0).float()).abs()
