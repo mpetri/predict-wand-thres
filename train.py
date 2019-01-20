@@ -18,6 +18,7 @@ import data_loader
 import models
 import os
 from tensorboardX import SummaryWriter
+from sklearn.metrics import mean_squared_error
 
 parser = argparse.ArgumentParser(description='PyTorch WAND Thres predictor')
 parser.add_argument('--data_dir', type=str,
