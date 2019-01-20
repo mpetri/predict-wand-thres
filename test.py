@@ -64,6 +64,7 @@ with torch.no_grad():
         preds = []
         under_preds = []
         actual = []
+        print("model;actual;pred;k")
         for qry, thres in dataset:
             qry = qry.view(1, qry.size(0))
             start = time.time()
@@ -78,6 +79,8 @@ with torch.no_grad():
 
             preds.append(pred_thres.item())
             actual.append(thres.item())
+            print("{};{};{};{}".format(args.model,
+                                       thres.item(), pred_thres.item(), args.k))
 
         MUE = np.mean(np.asarray(under_preds))
         MSE = mean_squared_error(actual, preds)
