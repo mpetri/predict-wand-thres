@@ -27,6 +27,7 @@ parser.add_argument('--queries', type=str, required=True, help='query data')
 parser.add_argument('--model', type=str, required=True, help='model file')
 parser.add_argument('--device', default="cpu", type=str,
                     required=False, help='compute device')
+parser.add_argument('--k', type=int, required=True, help='prediction depth')
 args = parser.parse_args()
 torch.set_num_threads(hyperparams.default_threads)
 print("Parameters:")
@@ -82,5 +83,5 @@ with torch.no_grad():
         MSE = mean_squared_error(actual, preds)
         RHO = pearsonr(actual, preds)
         percent_over = float(num_over_predicted * 100) / float(len(dataset))
-        print("MODEL {} MUE {} MSE {} RHO {} OVER% {}".format(
-            args.model, MUE, MSE, RHO, percent_over))
+        print("K {} MODEL {} MUE {} MSE {} RHO {} OVER% {}".format(args.k,
+                                                                   args.model, MUE, MSE, RHO, percent_over))
