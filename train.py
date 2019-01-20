@@ -101,7 +101,9 @@ def quantile_loss(x, y):
 
 
 def quantile_loss_eval(x, y):
-    diff = torch.from_numpy(x) - torch.from_numpy(y)
+    x = torch.from_numpy(x)
+    y = torch.from_numpy(y)
+    diff = x - y
     loss = huber_loss(x, y) * (quantiles -
                                (diff.detach() < 0).float()).abs()
     loss = loss.mean().abs()
@@ -161,7 +163,7 @@ try:
         my_print("start epoch {}/{}".format(epoch, args.epochs))
         train(epoch)
         pred, actual = evaluate(dev_dataset)
-        q_eval_loss = quantile_loss_eval(actual, pred)
+        q_eval_loss = quantile_loss_eval(pred, actual)
         errors = pred - actual
         writer.add_histogram('eval/errors', np.asarray(errors), epoch)
         writer.add_scalar('eval/q_eval_loss', q_eval_loss, epoch)
