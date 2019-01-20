@@ -17,6 +17,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from typing import List
 
+
 @dataclass(frozen=False)
 class Term:
     id: float = 0
@@ -53,6 +54,7 @@ class Term:
     block_score_4096: float = 0.0
     block_score_small: float = 0.0
 
+
 @dataclass(frozen=False)
 class Query:
     id: int = 0
@@ -62,48 +64,51 @@ class Query:
     term_ids: List[float] = field(default_factory=list)
     term_data: List[Term] = field(default_factory=list)
 
+
 def query_to_np(query):
-    qry_np = np.zeros(hyperparams.default_max_qry_len*hyperparams.num_term_params)
-    for idx,t in enumerate(query.term_data):
+    qry_np = np.zeros(hyperparams.default_max_qry_len *
+                      hyperparams.num_term_params)
+    for idx, t in enumerate(query.term_data):
 
-        qry_np[idx*hyperparams.num_term_params+0] = t.q_weight
-        qry_np[idx*hyperparams.num_term_params+1] = t.Ft
+        qry_np[idx * hyperparams.num_term_params + 0] = t.q_weight
+        qry_np[idx * hyperparams.num_term_params + 1] = t.Ft
 
-        qry_np[idx*hyperparams.num_term_params+2] = t.mean_ft
-        qry_np[idx*hyperparams.num_term_params+3] = t.med_ft
-        qry_np[idx*hyperparams.num_term_params+4] = t.min_ft
-        qry_np[idx*hyperparams.num_term_params+5] = t.max_ft
+        qry_np[idx * hyperparams.num_term_params + 2] = t.mean_ft
+        qry_np[idx * hyperparams.num_term_params + 3] = t.med_ft
+        qry_np[idx * hyperparams.num_term_params + 4] = t.min_ft
+        qry_np[idx * hyperparams.num_term_params + 5] = t.max_ft
 
-        qry_np[idx*hyperparams.num_term_params+6] = t.mean_doclen
-        qry_np[idx*hyperparams.num_term_params+7] = t.med_doclen
-        qry_np[idx*hyperparams.num_term_params+8] = t.min_doclen
-        qry_np[idx*hyperparams.num_term_params+9] = t.max_doclen
+        qry_np[idx * hyperparams.num_term_params + 6] = t.mean_doclen
+        qry_np[idx * hyperparams.num_term_params + 7] = t.med_doclen
+        qry_np[idx * hyperparams.num_term_params + 8] = t.min_doclen
+        qry_np[idx * hyperparams.num_term_params + 9] = t.max_doclen
 
-        qry_np[idx*hyperparams.num_term_params+10] = t.num_ft_geq_256
-        qry_np[idx*hyperparams.num_term_params+11] = t.num_ft_geq_128
-        qry_np[idx*hyperparams.num_term_params+12] = t.num_ft_geq_64
-        qry_np[idx*hyperparams.num_term_params+13] = t.num_ft_geq_32
-        qry_np[idx*hyperparams.num_term_params+14] = t.num_ft_geq_16
-        qry_np[idx*hyperparams.num_term_params+15] = t.num_ft_geq_8
-        qry_np[idx*hyperparams.num_term_params+16] = t.num_ft_geq_4
-        qry_np[idx*hyperparams.num_term_params+17] = t.num_ft_geq_2
+        qry_np[idx * hyperparams.num_term_params + 10] = t.num_ft_geq_256
+        qry_np[idx * hyperparams.num_term_params + 11] = t.num_ft_geq_128
+        qry_np[idx * hyperparams.num_term_params + 12] = t.num_ft_geq_64
+        qry_np[idx * hyperparams.num_term_params + 13] = t.num_ft_geq_32
+        qry_np[idx * hyperparams.num_term_params + 14] = t.num_ft_geq_16
+        qry_np[idx * hyperparams.num_term_params + 15] = t.num_ft_geq_8
+        qry_np[idx * hyperparams.num_term_params + 16] = t.num_ft_geq_4
+        qry_np[idx * hyperparams.num_term_params + 17] = t.num_ft_geq_2
 
-        qry_np[idx*hyperparams.num_term_params+18] = t.block_score_1
-        qry_np[idx*hyperparams.num_term_params+19] = t.block_score_2
-        qry_np[idx*hyperparams.num_term_params+20] = t.block_score_4
-        qry_np[idx*hyperparams.num_term_params+21] = t.block_score_8
-        qry_np[idx*hyperparams.num_term_params+22] = t.block_score_16
-        qry_np[idx*hyperparams.num_term_params+23] = t.block_score_32
-        qry_np[idx*hyperparams.num_term_params+24] = t.block_score_64
-        qry_np[idx*hyperparams.num_term_params+25] = t.block_score_128
-        qry_np[idx*hyperparams.num_term_params+26] = t.block_score_256
-        qry_np[idx*hyperparams.num_term_params+27] = t.block_score_512
-        qry_np[idx*hyperparams.num_term_params+28] = t.block_score_1024
-        qry_np[idx*hyperparams.num_term_params+29] = t.block_score_2048
-        qry_np[idx*hyperparams.num_term_params+30] = t.block_score_4096
-        qry_np[idx*hyperparams.num_term_params+31] = t.block_score_small
+        qry_np[idx * hyperparams.num_term_params + 18] = t.block_score_1
+        qry_np[idx * hyperparams.num_term_params + 19] = t.block_score_2
+        qry_np[idx * hyperparams.num_term_params + 20] = t.block_score_4
+        qry_np[idx * hyperparams.num_term_params + 21] = t.block_score_8
+        qry_np[idx * hyperparams.num_term_params + 22] = t.block_score_16
+        qry_np[idx * hyperparams.num_term_params + 23] = t.block_score_32
+        qry_np[idx * hyperparams.num_term_params + 24] = t.block_score_64
+        qry_np[idx * hyperparams.num_term_params + 25] = t.block_score_128
+        qry_np[idx * hyperparams.num_term_params + 26] = t.block_score_256
+        qry_np[idx * hyperparams.num_term_params + 27] = t.block_score_512
+        qry_np[idx * hyperparams.num_term_params + 28] = t.block_score_1024
+        qry_np[idx * hyperparams.num_term_params + 29] = t.block_score_2048
+        qry_np[idx * hyperparams.num_term_params + 30] = t.block_score_4096
+        qry_np[idx * hyperparams.num_term_params + 31] = t.block_score_small
 
     return qry_np
+
 
 def read_queries_and_thres(query_file, data_size=5000):
     ### read query file ###
@@ -167,9 +172,9 @@ def read_queries_and_thres(query_file, data_size=5000):
 
                     new_query.term_data.append(new_term)
 
-                def sort_Ft(val): 
+                def sort_Ft(val):
                     return val.Ft
-                new_query.term_data.sort(key = sort_Ft)  
+                new_query.term_data.sort(key=sort_Ft)
                 q_np = query_to_np(new_query)
                 queries.append(q_np)
                 thres_10.append(new_query.wand_thres_10)
@@ -204,7 +209,7 @@ def create_tensors(queries, dev):
                 t.wand_upper, hyperparams.const_score_buckets)
             qry[qidx, tidx, 1] = bucketize(
                 t.q_weight, hyperparams.const_score_buckets)
-                
+
             qry[qidx, tidx, 2] = bucketize(t.Ft, hyperparams.const_Ft_buckets)
             qry[qidx, tidx, 3] = bucketize(
                 t.mean_ft, hyperparams.const_freq_buckets)
@@ -242,11 +247,14 @@ def create_tensors(queries, dev):
                 t.num_ft_geq_2, hyperparams.const_Ft_buckets)
     return qry
 
+
 def create_tensors_from_np(queries, dev):
-    qry = torch.zeros(len(queries), hyperparams.default_max_qry_len * hyperparams.num_term_params, requires_grad=False, device=dev, dtype=torch.float)
-    for idx,q in enumerate(queries):
-        qry[idx,:] = torch.as_tensor(q)
+    qry = torch.zeros(len(queries), hyperparams.default_max_qry_len *
+                      hyperparams.num_term_params, requires_grad=False, device=dev, dtype=torch.float)
+    for idx, q in enumerate(queries):
+        qry[idx, :] = torch.as_tensor(q)
     return qry
+
 
 def create_thresholds(thres_lst, dev):
     thres = torch.zeros(len(thres_lst), 1, requires_grad=False,
@@ -258,9 +266,16 @@ def create_thresholds(thres_lst, dev):
 
 class InvertedIndexData(Dataset):
     def __init__(self, args, qry_file):
-        self.queries,self.thres_10,self.thres_100,self.thres_1000 = read_queries_and_thres(qry_file,0)
+        self.queries, self.thres_10, self.thres_100, self.thres_1000, _, _ = read_queries_and_thres(
+            qry_file, 0)
         self.tensor_queries = create_tensors_from_np(self.queries, args.device)
-        self.tensor_thres = create_thresholds(self.thres_10, args.device)
+
+        if args.k == 10:
+            self.tensor_thres = create_thresholds(self.thres_10, args.device)
+        if args.k == 100:
+            self.tensor_thres = create_thresholds(self.thres_100, args.device)
+        if args.k == 1000:
+            self.tensor_thres = create_thresholds(self.thres_1000, args.device)
 
         my_print("dataset statistics:", qry_file)
         my_print("\tqueries =", len(self.queries))

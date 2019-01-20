@@ -20,7 +20,8 @@ import os
 from tensorboardX import SummaryWriter
 
 parser = argparse.ArgumentParser(description='PyTorch WAND Thres predictor')
-parser.add_argument('--data_dir', type=str, required=True, help='query data dir')
+parser.add_argument('--data_dir', type=str,
+                    required=True, help='query data dir')
 parser.add_argument('--batch_size', type=int,
                     default=hyperparams.default_batch_size, help='batch size')
 parser.add_argument('--clip', type=float,
@@ -29,13 +30,15 @@ parser.add_argument('--lr', type=float,
                     default=hyperparams.default_learning_rate, help='initial learning rate')
 parser.add_argument('--layers', type=int,
                     default=hyperparams.default_num_layers, help='number of layers')
+parser.add_argument('--k', type=int, required=True, help='prediction depth')
 parser.add_argument('--epochs', default=hyperparams.default_epochs,
                     type=int, required=False, help='training epochs')
 parser.add_argument('--quantile', type=float,
                     default=0.5, help='quantile')
 parser.add_argument('--device', default="cpu", type=str,
                     required=False, help='compute device')
-parser.add_argument('--debug',default=False, dest='debug', action='store_true')
+parser.add_argument('--debug', default=False,
+                    dest='debug', action='store_true')
 args = parser.parse_args()
 init_log(args)
 torch.set_num_threads(hyperparams.default_threads)
