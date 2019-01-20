@@ -9,7 +9,7 @@ default_num_layers = 4
 default_embed_size = 32
 default_threads = 16
 default_max_qry_len = 10
-default_dropout = 0.5
+default_dropout = 0.25
 
 random_seed = 12345
 
