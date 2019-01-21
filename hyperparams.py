@@ -13,7 +13,7 @@ default_dropout = 0.25
 
 random_seed = 12345
 
-num_term_params = 32
+num_term_params = 35
 
 # list len buckets [ 2**j for j in range(0,25) ]
 const_Ft_buckets = [0] + [2**j for j in range(0, 25)]

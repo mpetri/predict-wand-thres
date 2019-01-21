@@ -53,7 +53,9 @@ class Term:
     block_score_2048: float = 0.0
     block_score_4096: float = 0.0
     block_score_small: float = 0.0
-
+    k10_max: float = 0.0
+    k100_max: float = 0.0
+    k1000_max: float = 0.0
 
 @dataclass(frozen=False)
 class Query:
@@ -61,51 +63,61 @@ class Query:
     wand_thres_10: float = 0.0
     wand_thres_100: float = 0.0
     wand_thres_1000: float = 0.0
+    qmax_k_10: float = 0.0
+    qmax_k_100: float = 0.0
+    qmax_k_1000: float = 0.0
     term_ids: List[float] = field(default_factory=list)
     term_data: List[Term] = field(default_factory=list)
 
 
 def query_to_np(query):
-    qry_np = np.zeros(hyperparams.default_max_qry_len *
+    qry_np = np.zeros(3 + hyperparams.default_max_qry_len *
                       hyperparams.num_term_params)
+    qry_np[0] = query.qmax_k_10
+    qry_np[1] = query.qmax_k_100
+    qry_np[2] = query.qmax_k_1000
     for idx, t in enumerate(query.term_data):
 
-        qry_np[idx * hyperparams.num_term_params + 0] = t.q_weight
-        qry_np[idx * hyperparams.num_term_params + 1] = t.Ft
+        qry_np[3 + (idx * hyperparams.num_term_params + 0)] = t.q_weight
+        qry_np[3 + (idx * hyperparams.num_term_params + 1)] = t.Ft
 
-        qry_np[idx * hyperparams.num_term_params + 2] = t.mean_ft
-        qry_np[idx * hyperparams.num_term_params + 3] = t.med_ft
-        qry_np[idx * hyperparams.num_term_params + 4] = t.min_ft
-        qry_np[idx * hyperparams.num_term_params + 5] = t.max_ft
+        qry_np[3 + (idx * hyperparams.num_term_params + 2)] = t.k10_max
+        qry_np[3 + (idx * hyperparams.num_term_params + 3)] = t.k100_max
+        qry_np[3 + (idx * hyperparams.num_term_params + 4)] = t.k1000_max
 
-        qry_np[idx * hyperparams.num_term_params + 6] = t.mean_doclen
-        qry_np[idx * hyperparams.num_term_params + 7] = t.med_doclen
-        qry_np[idx * hyperparams.num_term_params + 8] = t.min_doclen
-        qry_np[idx * hyperparams.num_term_params + 9] = t.max_doclen
+        qry_np[3 + idx * hyperparams.num_term_params + 5] = t.mean_ft
+        qry_np[3 + idx * hyperparams.num_term_params + 6] = t.med_ft
+        qry_np[3 + idx * hyperparams.num_term_params + 7] = t.min_ft
+        qry_np[3 + idx * hyperparams.num_term_params + 8] = t.max_ft
 
-        qry_np[idx * hyperparams.num_term_params + 10] = t.num_ft_geq_256
-        qry_np[idx * hyperparams.num_term_params + 11] = t.num_ft_geq_128
-        qry_np[idx * hyperparams.num_term_params + 12] = t.num_ft_geq_64
-        qry_np[idx * hyperparams.num_term_params + 13] = t.num_ft_geq_32
-        qry_np[idx * hyperparams.num_term_params + 14] = t.num_ft_geq_16
-        qry_np[idx * hyperparams.num_term_params + 15] = t.num_ft_geq_8
-        qry_np[idx * hyperparams.num_term_params + 16] = t.num_ft_geq_4
-        qry_np[idx * hyperparams.num_term_params + 17] = t.num_ft_geq_2
+        qry_np[3 + idx * hyperparams.num_term_params + 9] = t.mean_doclen
+        qry_np[3 + idx * hyperparams.num_term_params + 10] = t.med_doclen
+        qry_np[3 + idx * hyperparams.num_term_params + 11] = t.min_doclen
+        qry_np[3 + idx * hyperparams.num_term_params + 12] = t.max_doclen
 
-        qry_np[idx * hyperparams.num_term_params + 18] = t.block_score_1
-        qry_np[idx * hyperparams.num_term_params + 19] = t.block_score_2
-        qry_np[idx * hyperparams.num_term_params + 20] = t.block_score_4
-        qry_np[idx * hyperparams.num_term_params + 21] = t.block_score_8
-        qry_np[idx * hyperparams.num_term_params + 22] = t.block_score_16
-        qry_np[idx * hyperparams.num_term_params + 23] = t.block_score_32
-        qry_np[idx * hyperparams.num_term_params + 24] = t.block_score_64
-        qry_np[idx * hyperparams.num_term_params + 25] = t.block_score_128
-        qry_np[idx * hyperparams.num_term_params + 26] = t.block_score_256
-        qry_np[idx * hyperparams.num_term_params + 27] = t.block_score_512
-        qry_np[idx * hyperparams.num_term_params + 28] = t.block_score_1024
-        qry_np[idx * hyperparams.num_term_params + 29] = t.block_score_2048
-        qry_np[idx * hyperparams.num_term_params + 30] = t.block_score_4096
-        qry_np[idx * hyperparams.num_term_params + 31] = t.block_score_small
+        qry_np[3 + idx * hyperparams.num_term_params + 13] = t.num_ft_geq_256
+        qry_np[3 + idx * hyperparams.num_term_params + 14] = t.num_ft_geq_128
+        qry_np[3 + idx * hyperparams.num_term_params + 15] = t.num_ft_geq_64
+        qry_np[3 + idx * hyperparams.num_term_params + 16] = t.num_ft_geq_32
+        qry_np[3 + idx * hyperparams.num_term_params + 17] = t.num_ft_geq_16
+        qry_np[3 + idx * hyperparams.num_term_params + 18] = t.num_ft_geq_8
+        qry_np[3 + idx * hyperparams.num_term_params + 19] = t.num_ft_geq_4
+        qry_np[3 + idx * hyperparams.num_term_params + 20] = t.num_ft_geq_2
+
+        qry_np[3 + idx * hyperparams.num_term_params + 21] = t.block_score_1
+        qry_np[3 + idx * hyperparams.num_term_params + 22] = t.block_score_2
+        qry_np[3 + idx * hyperparams.num_term_params + 23] = t.block_score_4
+        qry_np[3 + idx * hyperparams.num_term_params + 24] = t.block_score_8
+        qry_np[3 + idx * hyperparams.num_term_params + 25] = t.block_score_16
+        qry_np[3 + idx * hyperparams.num_term_params + 26] = t.block_score_32
+        qry_np[3 + idx * hyperparams.num_term_params + 27] = t.block_score_64
+        qry_np[3 + idx * hyperparams.num_term_params + 28] = t.block_score_128
+        qry_np[3 + idx * hyperparams.num_term_params + 29] = t.block_score_256
+        qry_np[3 + idx * hyperparams.num_term_params + 30] = t.block_score_512
+        qry_np[3 + idx * hyperparams.num_term_params + 31] = t.block_score_1024
+        qry_np[3 + idx * hyperparams.num_term_params + 32] = t.block_score_2048
+        qry_np[3 + idx * hyperparams.num_term_params + 33] = t.block_score_4096
+        qry_np[3 + idx * hyperparams.num_term_params + 34] = t.block_score_small
 
     return qry_np
 
@@ -132,11 +144,19 @@ def read_queries_and_thres(query_file, data_size=5000):
                 new_query.wand_thres_10 = float(qry_dict["wand_thres_10"])
                 new_query.wand_thres_100 = float(qry_dict["wand_thres_100"])
                 new_query.wand_thres_1000 = float(qry_dict["wand_thres_1000"])
+                new_query.qmax_k_10 = float(qry_dict["max_qk10"])
+                new_query.qmax_k_100 = float(qry_dict["max_qk100"])
+                new_query.qmax_k_1000 = float(qry_dict["max_qk1000"])
                 for t in qry_dict["term_data"]:
                     new_term = Term()
                     new_term.id = t["id"]
                     new_term.q_weight = float(t["q_weight"])
                     new_term.Ft = float(t["Ft"])
+
+                    new_term.k10_max = float(t["k10m"])
+                    new_term.k100_max = float(t["k100m"])
+                    new_term.k1000_max = float(t["k1000m"])
+
                     new_term.mean_ft = float(t["mean_ft"])
                     new_term.med_ft = float(t["med_ft"])
                     new_term.min_ft = float(t["min_ft"])

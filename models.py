@@ -13,7 +13,7 @@ class MLP(nn.Module):
     def __init__(self, num_layers=hyperparams.default_num_layers):
         super(MLP, self).__init__()
         self.num_layers = num_layers
-        self.input_dim = hyperparams.default_max_qry_len * hyperparams.num_term_params
+        self.input_dim = 3 + hyperparams.default_max_qry_len * hyperparams.num_term_params
         self.layers = torch.nn.Sequential()
         for i in range(num_layers):
             self.layers.add_module("Dropout_{}".format(
