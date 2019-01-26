@@ -52,6 +52,8 @@ else:
 print("Using torch device:", args.device)
 
 dataset = data_loader.InvertedIndexData(args, args.queries)
+qids = dataset.qids
+qlens = dataset.qlens
 
 with torch.no_grad():
     with open(args.model, 'rb') as f:
@@ -62,29 +64,31 @@ with torch.no_grad():
         error_sum = 0.0
         num_over_predicted = 0
         preds = []
-        under_preds = []
         actual = []
-        print("model;actual;pred;k")
+        under_preds = []
+        min_elapsed = 9999999999
         for qry, thres in dataset:
             qry = qry.view(1, qry.size(0))
             start = time.time()
             pred_thres = model(qry.to(args.device))
             elapsed = time.time() - start
+            min_elapsed = min(elapsed,min_elapsed)
             total_time_ms += elapsed * 1000
             if pred_thres.item() - thres.item() > 0:
                 num_over_predicted += 1
 
-            if thres.item() >= pred_thres.item():
-                under_preds.append(thres.item() - pred_thres.item())
+            pred_act = max(0.0, pred_thres.item())
+            act_thres = thres.item()
+            preds.append(pred_act)
+            actual.append(act_thres)
 
-            preds.append(pred_thres.item())
-            actual.append(thres.item())
-            print("{};{};{};{}".format(args.model,
-                                       thres.item(), pred_thres.item(), args.k))
+            if thres.item() >= pred_thres.item():
+                under_preds.append(pred_act / thres.item())
+
 
         MUE = np.mean(np.asarray(under_preds))
-        MSE = mean_squared_error(actual, preds)
         RHO = pearsonr(actual, preds)
         percent_over = float(num_over_predicted * 100) / float(len(dataset))
-        print("K {} MODEL {} MUE {} MSE {} RHO {} OVER% {}".format(args.k,
-                                                                   args.model, MUE, MSE, RHO, percent_over))
+        for qid,qlen,pred,act in zip(qids,qlens,preds,actual):
+            print("{},{},{},{},{},{},{}".format(qid,qlen,args.k,args.model,RHO[0],pred,act))
+

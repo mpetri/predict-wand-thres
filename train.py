@@ -122,7 +122,7 @@ def train(epoch):
             optim.zero_grad()
             queries, thres = batch
             scores = model(queries.to(args.device))
-            loss = quantile_loss(scores, thres)
+            loss = quantile_loss(scores, thres.to(args.device))
             writer.add_scalar('loss/total', loss.item(), batch_num)
             losses.append(loss.item())
             loss.backward()
@@ -146,7 +146,7 @@ def evaluate(eval_data):
         for qry, thres in eval_data:
             qry = qry.view(1, qry.size(0))
             pred_thres = model(qry.to(args.device))
-            diff = pred_thres - thres
+            diff = pred_thres - thres.to(args.device)
             pred.append(pred_thres.item())
             actual.append(thres.item())
         return np.asarray(pred), np.asarray(actual)
