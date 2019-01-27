@@ -155,7 +155,7 @@ for q in args.quantiles:
         for epoch in range(1, args.epochs + 1):
             epoch_start_time = time.time()
             my_print("start epoch {}/{}".format(epoch, args.epochs))
-            for start in range(0, len(dataset), 1000000):
+            for start in range(0, len(full_dataset), 1000000):
                 subset = data_loader.InvertedIndexSubSet(
                     full_dataset, start, 1000000, args.device)
                 train(model, epoch, subset, q)
