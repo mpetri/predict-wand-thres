@@ -77,7 +77,9 @@ def query_to_np(query):
     qry_np[1] = query.qmax_k_100
     qry_np[2] = query.qmax_k_1000
     for idx, t in enumerate(query.term_data):
-
+        #if idx > 9:
+        #    print("WARNING")
+            #break
         qry_np[3 + (idx * hyperparams.num_term_params + 0)] = t.q_weight
         qry_np[3 + (idx * hyperparams.num_term_params + 1)] = t.Ft
 
@@ -125,6 +127,7 @@ def query_to_np(query):
 def read_queries_and_thres(query_file, data_size=5000):
     ### read query file ###
     queries = []
+    gross_preds = []
     thres_10 = []
     thres_100 = []
     thres_1000 = []
@@ -135,11 +138,13 @@ def read_queries_and_thres(query_file, data_size=5000):
     with open(query_file) as fp:
         lines = fp.readlines()
         for line in tqdm(lines, desc="read qrys", unit="qrys"):
+            #if total % 1 == 0: print(total)
             total += 1
             qry_dict = rapidjson.loads(line)
             new_query = Query()
             new_query.term_ids = qry_dict["term_ids"]
-            if len(new_query.term_ids) <= hyperparams.default_max_qry_len:
+            if True:
+            #if len(new_query.term_ids) <= hyperparams.default_max_qry_len:
                 new_query.id = qry_dict["id"]
                 new_query.wand_thres_10 = float(qry_dict["wand_thres_10"])
                 new_query.wand_thres_100 = float(qry_dict["wand_thres_100"])
@@ -147,16 +152,30 @@ def read_queries_and_thres(query_file, data_size=5000):
                 new_query.qmax_k_10 = float(qry_dict["max_qk10"])
                 new_query.qmax_k_100 = float(qry_dict["max_qk100"])
                 new_query.qmax_k_1000 = float(qry_dict["max_qk1000"])
+                terms_total = 0
+                #print(len(qry_dict["term_data"]))
                 for t in qry_dict["term_data"]:
+                    terms_total += 1
+                    if terms_total > 10:
+                        print("WARNING, pruning query")
+                        print(len(qry_dict["term_data"]))
+                        break
+                    #print('*' * terms_total)
                     new_term = Term()
                     new_term.id = t["id"]
                     new_term.q_weight = float(t["q_weight"])
                     new_term.Ft = float(t["Ft"])
 
-                    new_term.k10_max = float(t["k10m"])
-                    new_term.k100_max = float(t["k100m"])
-                    new_term.k1000_max = float(t["k1000m"])
-
+                    try:
+                        new_term.k10_max = float(t["k10m"])
+                        new_term.k100_max = float(t["k100m"])
+                        new_term.k1000_max = float(t["k1000m"])
+                    except KeyError:
+                        print("WARNING: k_max terms missing")
+                        new_term.k10_max = 0.0
+                        new_term.k100_max = 0.0
+                        new_term.k1000_max = 0.0
+                        
                     new_term.mean_ft = float(t["mean_ft"])
                     new_term.med_ft = float(t["med_ft"])
                     new_term.min_ft = float(t["min_ft"])
@@ -202,13 +221,17 @@ def read_queries_and_thres(query_file, data_size=5000):
                 thres_1000.append(new_query.wand_thres_1000)
                 query_ids.append(new_query.id)
                 query_term_ids.append(new_query.term_ids)
+                gross_preds.append([new_query.qmax_k_10,
+                                    new_query.qmax_k_100,
+                                    new_query.qmax_k_1000])
+
                 if data_size != 0 and len(thres_10) > data_size:
                     break
             else:
                 skipped += 1
 
     print("skipped queries {} out of {}".format(skipped, total))
-    return queries, thres_10, thres_100, thres_1000, query_ids, query_term_ids
+    return queries, thres_10, thres_100, thres_1000, query_ids, query_term_ids, gross_preds
 
 
 def bucketize(number, bucket_boundaries):
