@@ -20,6 +20,67 @@ import os
 from tensorboardX import SummaryWriter
 from sklearn.metrics import mean_squared_error
 
+huber_loss = nn.SmoothL1Loss(reduction='none')
+
+
+def quantile_loss(x, y, quant):
+    diff = x - y
+    loss = huber_loss(x, y) * (quant -
+                               (diff.detach() < 0).float()).abs()
+    loss = loss.mean().abs()
+    return loss
+
+
+def quantile_loss_eval(x, y, quant):
+    x = torch.from_numpy(x).float().to(args.device)
+    y = torch.from_numpy(y).float().to(args.device)
+    diff = x - y
+    loss = huber_loss(x, y) * (quant -
+                               (diff.detach() < 0).float()).abs()
+    loss = loss.mean().abs()
+    return loss
+
+
+def train(model, epoch, data, quant):
+    dataloader = DataLoader(data, batch_size=args.batch_size, shuffle=True)
+
+    quantiles = torch.tensor([[quant]]).view(1, -1).float().to(args.device)
+
+    model.train()
+    optim = torch.optim.Adam(model.parameters(), lr=lr)
+    my_print("epoch {} start training {} instances with lr {}".format(
+        epoch, len(dataloader), lr))
+
+    with tqdm(total=len(dataloader), unit='batches', desc='train') as pbar:
+        losses = []
+        for batch_num, batch in enumerate(dataloader):
+            optim.zero_grad()
+            queries, thres = batch
+            scores = model(queries.to(args.device))
+            loss = quantile_loss(scores, thres.to(args.device), quantiles)
+            losses.append(loss.item())
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip)
+            optim.step()
+            pbar.set_postfix(loss=np.mean(losses[-128:]))
+            pbar.update(1)
+        pbar.close()
+
+
+def evaluate(model, eval_data):
+    with torch.no_grad():
+        model.eval()
+        pred = []
+        actual = []
+        for qry, thres in eval_data:
+            qry = qry.view(1, qry.size(0))
+            pred_thres = model(qry.to(args.device))
+            diff = pred_thres - thres.to(args.device)
+            pred.append(pred_thres.item())
+            actual.append(thres.item())
+        return np.asarray(pred), np.asarray(actual)
+
+
 parser = argparse.ArgumentParser(description='PyTorch WAND Thres predictor')
 parser.add_argument('--data_dir', type=str,
                     required=True, help='query data dir')
@@ -34,8 +95,8 @@ parser.add_argument('--layers', type=int,
 parser.add_argument('--k', type=int, required=True, help='prediction depth')
 parser.add_argument('--epochs', default=hyperparams.default_epochs,
                     type=int, required=False, help='training epochs')
-parser.add_argument('--quantile', type=float,
-                    default=0.5, help='quantile')
+parser.add_argument('--quantiles', nargs='+',
+                    help='quantiles', type=float, required=True)
 parser.add_argument('--device', default="cpu", type=str,
                     required=False, help='compute device')
 parser.add_argument('--debug', default=False,
@@ -69,116 +130,49 @@ if args.debug == True:
     train_file = args.data_dir + "/debug.json"
 dev_file = args.data_dir + "/dev.json"
 
-dataset = data_loader.InvertedIndexData(args, train_file)
+full_dataset = data_loader.InvertedIndexData(args, train_file)
 dev_dataset = data_loader.InvertedIndexData(args, dev_file)
-
-dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
 
 output_prefix = args.data_dir + "/models/"
 
 # ###############################################################################
 # # Build the model
 # ###############################################################################
-model_file = output_prefix + "/" + create_file_name(args) + ".model"
-my_print("Writing model to file", model_file)
-model = models.MLP(args.layers)
-model = model.to(device=args.device)
-my_print(model)
+for q in args.quantiles:
+    my_print("Training for quantile q = {}".format(q))
+    model_file = output_prefix + "/" + create_file_name(args, q) + ".model"
+    my_print("Writing model to file", model_file)
+    model = models.MLP(args.layers)
+    model = model.to(device=args.device)
+    my_print(model)
 
-writer = SummaryWriter(output_prefix + "/runs/" + create_file_name(args))
+    # # Loop over epochs.
+    lr = args.lr
+    best_val_loss = None
 
-huber_loss = nn.SmoothL1Loss(reduction='none')
+    # # At any point you can hit Ctrl + C to break out of training early.
+    try:
+        for epoch in range(1, args.epochs + 1):
+            epoch_start_time = time.time()
+            my_print("start epoch {}/{}".format(epoch, args.epochs))
+            for start in range(0, len(full_dataset), 1000000):
+                subset = data_loader.InvertedIndexSubSet(
+                    full_dataset, start, 1000000, args.device)
+                train(model, epoch, subset, q)
+            pred, actual = evaluate(model, dev_dataset)
+            q_eval_loss = quantile_loss_eval(pred, actual, q)
+            errors = pred - actual
+            my_print('-' * 89)
+            my_print("epoch {} val q_eval_loss {}".format(epoch, q_eval_loss))
+            my_print("epoch {} errors {}".format(epoch, errors[:10]))
+            my_print('-' * 89)
+            # Save the model if the validation loss is the best we've seen so far.
+            if not best_val_loss or q_eval_loss < best_val_loss:
+                my_print("epoch {} NEW BEST LOSS {}".format(epoch, q_eval_loss))
+                with open(model_file, 'wb') as f:
+                    torch.save(model, f)
+                best_val_loss = q_eval_loss
 
-quantiles = torch.tensor([[args.quantile]]).view(1, -1).float().to(args.device)
-
-
-def quantile_loss(x, y):
-    diff = x - y
-    loss = huber_loss(x, y) * (quantiles -
-                               (diff.detach() < 0).float()).abs()
-    loss = loss.mean().abs()
-    return loss
-
-
-def quantile_loss_eval(x, y):
-    x = torch.from_numpy(x).float().to(args.device)
-    y = torch.from_numpy(y).float().to(args.device)
-    diff = x - y
-    loss = huber_loss(x, y) * (quantiles -
-                               (diff.detach() < 0).float()).abs()
-    loss = loss.mean().abs()
-    return loss
-
-
-def train(epoch):
-    model.train()
-    optim = torch.optim.Adam(model.parameters(), lr=lr)
-    my_print("epoch {} start training {} instances with lr {}".format(
-        epoch, len(dataset), lr))
-
-    with tqdm(total=len(dataloader), unit='batches', desc='train') as pbar:
-        losses = []
-        for batch_num, batch in enumerate(dataloader):
-            optim.zero_grad()
-            queries, thres = batch
-            scores = model(queries.to(args.device))
-            loss = quantile_loss(scores, thres)
-            writer.add_scalar('loss/total', loss.item(), batch_num)
-            losses.append(loss.item())
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip)
-            optim.step()
-            pbar.set_postfix(loss=np.mean(losses[-128:]))
-            writer.add_scalar('loss/mean-over-128',
-                              np.mean(losses[-128:]), batch_num)
-            pbar.update(1)
-        for name, param in model.named_parameters():
-            if 'bn' not in name:
-                writer.add_histogram(name, param, batch_num)
-        pbar.close()
-
-
-def evaluate(eval_data):
-    with torch.no_grad():
-        model.eval()
-        pred = []
-        actual = []
-        for qry, thres in eval_data:
-            qry = qry.view(1, qry.size(0))
-            pred_thres = model(qry.to(args.device))
-            diff = pred_thres - thres
-            pred.append(pred_thres.item())
-            actual.append(thres.item())
-        return np.asarray(pred), np.asarray(actual)
-
-
-# # Loop over epochs.
-lr = args.lr
-best_val_loss = None
-
-# # At any point you can hit Ctrl + C to break out of training early.
-try:
-    for epoch in range(1, args.epochs + 1):
-        epoch_start_time = time.time()
-        my_print("start epoch {}/{}".format(epoch, args.epochs))
-        train(epoch)
-        pred, actual = evaluate(dev_dataset)
-        q_eval_loss = quantile_loss_eval(pred, actual)
-        errors = pred - actual
-        writer.add_histogram('eval/errors', np.asarray(errors), epoch)
-        writer.add_scalar('eval/q_eval_loss', q_eval_loss, epoch)
+    except KeyboardInterrupt:
         my_print('-' * 89)
-        my_print("epoch {} val q_eval_loss {}".format(epoch, q_eval_loss))
-        my_print("epoch {} errors {}".format(epoch, errors[:10]))
-        my_print('-' * 89)
-        # Save the model if the validation loss is the best we've seen so far.
-        if not best_val_loss or q_eval_loss < best_val_loss:
-            with open(model_file, 'wb') as f:
-                torch.save(model, f)
-            best_val_loss = q_eval_loss
-
-except KeyboardInterrupt:
-    my_print('-' * 89)
-    my_print('Exiting from training early')
-
-writer.close()
+        my_print('Exiting from training early')

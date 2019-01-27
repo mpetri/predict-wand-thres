@@ -4,7 +4,7 @@ import torch
 default_learning_rate = 0.001
 default_epochs = 20
 default_gradient_clipping = 0.25
-default_batch_size = 128
+default_batch_size = 2048
 default_num_layers = 4
 default_embed_size = 32
 default_threads = 16

@@ -11,18 +11,18 @@ def print_to_string(*args, **kwargs):
     return contents
 
 
-def create_file_name(args):
-    file_name = "BATCH{}-EPOCH{}-LR{}-LAYERS{}-LOSS-Q{}-K{}".format(args.batch_size,
-                                                                    args.epochs,
-                                                                    args.lr,
-                                                                    args.layers,
-                                                                    args.quantile,
-                                                                    args.k)
+def create_file_name(args, q):
+    file_name = "MLP-L{}-Q{}-K{}".format(args.layers, q, args.k)
+    return file_name
+
+
+def create_file_name_no_q(args):
+    file_name = "MLP-L{}-K{}".format(args.layers, args.k)
     return file_name
 
 
 def init_log(args):
-    file_name = create_file_name(args)
+    file_name = create_file_name_no_q(args)
     log_file = args.data_dir + "/models/" + file_name + ".log"
     print("Writing log to file", log_file, flush=True)
     logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO,

@@ -57,6 +57,7 @@ class Term:
     k100_max: float = 0.0
     k1000_max: float = 0.0
 
+
 @dataclass(frozen=False)
 class Query:
     id: int = 0
@@ -153,12 +154,12 @@ def read_queries_and_thres(query_file, data_size=5000):
                 new_query.qmax_k_100 = float(qry_dict["max_qk100"])
                 new_query.qmax_k_1000 = float(qry_dict["max_qk1000"])
                 terms_total = 0
-                #print(len(qry_dict["term_data"]))
+                # qid,qlen,k,model,rho,pred,actual
                 for t in qry_dict["term_data"]:
                     terms_total += 1
                     if terms_total > 10:
-                        print("WARNING, pruning query")
-                        print(len(qry_dict["term_data"]))
+                        #print("WARNING, pruning query")
+                        #print(len(qry_dict["term_data"]))
                         break
                     #print('*' * terms_total)
                     new_term = Term()
@@ -234,74 +235,17 @@ def read_queries_and_thres(query_file, data_size=5000):
     return queries, thres_10, thres_100, thres_1000, query_ids, query_term_ids, gross_preds
 
 
-def bucketize(number, bucket_boundaries):
-    result = 0
-    if number > bucket_boundaries[-1]:
-        return len(bucket_boundaries) - 1
-    for boundary in bucket_boundaries:
-        result += (number > boundary)
-    return result
-
-
-def create_tensors(queries, dev):
-    qry = torch.zeros(len(queries), hyperparams.default_max_qry_len,
-                      hyperparams.num_term_params, requires_grad=False, device=dev, dtype=torch.long)
-    for qidx, q in enumerate(tqdm(queries, desc="bucketize qrys", unit="qrys")):
-        for tidx, t in enumerate(q.term_data):
-            qry[qidx, tidx, 0] = bucketize(
-                t.wand_upper, hyperparams.const_score_buckets)
-            qry[qidx, tidx, 1] = bucketize(
-                t.q_weight, hyperparams.const_score_buckets)
-
-            qry[qidx, tidx, 2] = bucketize(t.Ft, hyperparams.const_Ft_buckets)
-            qry[qidx, tidx, 3] = bucketize(
-                t.mean_ft, hyperparams.const_freq_buckets)
-            qry[qidx, tidx, 4] = bucketize(
-                t.med_ft, hyperparams.const_freq_buckets)
-            qry[qidx, tidx, 5] = bucketize(
-                t.min_ft, hyperparams.const_freq_buckets)
-            qry[qidx, tidx, 6] = bucketize(
-                t.max_ft, hyperparams.const_freq_buckets)
-
-            qry[qidx, tidx, 7] = bucketize(
-                t.mean_ft, hyperparams.const_doc_len_buckets)
-            qry[qidx, tidx, 8] = bucketize(
-                t.med_ft, hyperparams.const_doc_len_buckets)
-            qry[qidx, tidx, 9] = bucketize(
-                t.min_ft, hyperparams.const_doc_len_buckets)
-            qry[qidx, tidx, 10] = bucketize(
-                t.max_ft, hyperparams.const_doc_len_buckets)
-
-            qry[qidx, tidx, 11] = bucketize(
-                t.num_ft_geq_256, hyperparams.const_Ft_buckets)
-            qry[qidx, tidx, 12] = bucketize(
-                t.num_ft_geq_128, hyperparams.const_Ft_buckets)
-            qry[qidx, tidx, 13] = bucketize(
-                t.num_ft_geq_64, hyperparams.const_Ft_buckets)
-            qry[qidx, tidx, 14] = bucketize(
-                t.num_ft_geq_32, hyperparams.const_Ft_buckets)
-            qry[qidx, tidx, 15] = bucketize(
-                t.num_ft_geq_16, hyperparams.const_Ft_buckets)
-            qry[qidx, tidx, 16] = bucketize(
-                t.num_ft_geq_8, hyperparams.const_Ft_buckets)
-            qry[qidx, tidx, 17] = bucketize(
-                t.num_ft_geq_4, hyperparams.const_Ft_buckets)
-            qry[qidx, tidx, 18] = bucketize(
-                t.num_ft_geq_2, hyperparams.const_Ft_buckets)
-    return qry
-
-
-def create_tensors_from_np(queries, dev):
-    qry = torch.zeros(len(queries), hyperparams.default_max_qry_len *
-                      hyperparams.num_term_params, requires_grad=False, device=dev, dtype=torch.float)
+def create_tensors_from_np(queries):
+    qry = torch.zeros(len(queries), 3 + hyperparams.default_max_qry_len *
+                      hyperparams.num_term_params, requires_grad=False, dtype=torch.float)
     for idx, q in enumerate(queries):
         qry[idx, :] = torch.as_tensor(q)
     return qry
 
 
-def create_thresholds(thres_lst, dev):
+def create_thresholds(thres_lst):
     thres = torch.zeros(len(thres_lst), 1, requires_grad=False,
-                        device=dev, dtype=torch.float)
+                        dtype=torch.float)
     for qidx, t in enumerate(thres_lst):
         thres[qidx] = t
     return thres
@@ -309,19 +253,41 @@ def create_thresholds(thres_lst, dev):
 
 class InvertedIndexData(Dataset):
     def __init__(self, args, qry_file):
-        self.queries, self.thres_10, self.thres_100, self.thres_1000, _, _ = read_queries_and_thres(
+        self.queries, self.thres_10, self.thres_100, self.thres_1000, self.qids, self.qterms = read_queries_and_thres(
             qry_file, 0)
-        self.tensor_queries = create_tensors_from_np(self.queries, args.device)
+        self.tensor_queries = create_tensors_from_np(self.queries)
+        self.qlens = []
+        for qt in self.qterms:
+            self.qlens.append(len(qt))
 
         if args.k == 10:
-            self.tensor_thres = create_thresholds(self.thres_10, args.device)
+            self.tensor_thres = create_thresholds(self.thres_10)
         if args.k == 100:
-            self.tensor_thres = create_thresholds(self.thres_100, args.device)
+            self.tensor_thres = create_thresholds(self.thres_100)
         if args.k == 1000:
-            self.tensor_thres = create_thresholds(self.thres_1000, args.device)
+            self.tensor_thres = create_thresholds(self.thres_1000)
 
         my_print("dataset statistics:", qry_file)
         my_print("\tqueries =", len(self.queries))
+
+    def __len__(self):
+        return len(self.queries)
+
+    def __getitem__(self, idx):
+        return self.tensor_queries[idx, :], self.tensor_thres[idx, :]
+
+
+class InvertedIndexSubSet(Dataset):
+    def __init__(self, full_dataset, start, subset_size, device):
+        self.queries = full_dataset.queries[start:start + subset_size]
+        self.tensor_queries = full_dataset.tensor_queries[start:start + subset_size].to(
+            device)
+        self.thres_10 = full_dataset.thres_10[start:start + subset_size]
+        self.thres_100 = full_dataset.thres_100[start:start + subset_size]
+        self.thres_1000 = full_dataset.thres_1000[start:start + subset_size]
+        self.qids = full_dataset.qterms[start:start + subset_size]
+        self.tensor_thres = full_dataset.tensor_thres[start:start + subset_size].to(
+            device)
 
     def __len__(self):
         return len(self.queries)
