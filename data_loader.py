@@ -233,17 +233,17 @@ class InvertedIndexData(Dataset):
     def __init__(self, args, qry_file):
         self.queries, self.thres_10, self.thres_100, self.thres_1000, self.qids, self.qterms = read_queries_and_thres(
             qry_file, 0)
-        self.tensor_queries = create_tensors_from_np(self.queries, args.device)
+        self.tensor_queries = create_tensors_from_np(self.queries)
         self.qlens = []
         for qt in self.qterms:
             self.qlens.append(len(qt))
 
         if args.k == 10:
-            self.tensor_thres = create_thresholds(self.thres_10, args.device)
+            self.tensor_thres = create_thresholds(self.thres_10)
         if args.k == 100:
-            self.tensor_thres = create_thresholds(self.thres_100, args.device)
+            self.tensor_thres = create_thresholds(self.thres_100)
         if args.k == 1000:
-            self.tensor_thres = create_thresholds(self.thres_1000, args.device)
+            self.tensor_thres = create_thresholds(self.thres_1000)
 
         my_print("dataset statistics:", qry_file)
         my_print("\tqueries =", len(self.queries))
