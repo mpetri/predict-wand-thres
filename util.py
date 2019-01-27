@@ -12,7 +12,7 @@ def print_to_string(*args, **kwargs):
 
 
 def create_file_name(args, q):
-    file_name = "MLP-L{}-Q{}-K{}".format(args.layers, args.quantile, args.k)
+    file_name = "MLP-L{}-Q{}-K{}".format(args.layers, q, args.k)
     return file_name
 
 
