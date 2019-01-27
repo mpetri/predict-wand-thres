@@ -57,6 +57,7 @@ class Term:
     k100_max: float = 0.0
     k1000_max: float = 0.0
 
+
 @dataclass(frozen=False)
 class Query:
     id: int = 0
@@ -211,16 +212,18 @@ def read_queries_and_thres(query_file, data_size=5000):
     print("skipped queries {} out of {}".format(skipped, total))
     return queries, thres_10, thres_100, thres_1000, query_ids, query_term_ids
 
-def create_tensors_from_np(queries, dev):
-    qry = torch.zeros(len(queries), 3 +  hyperparams.default_max_qry_len *
+
+def create_tensors_from_np(queries):
+    qry = torch.zeros(len(queries), 3 + hyperparams.default_max_qry_len *
                       hyperparams.num_term_params, requires_grad=False, dtype=torch.float)
     for idx, q in enumerate(queries):
         qry[idx, :] = torch.as_tensor(q)
     return qry
 
 
-def create_thresholds(thres_lst, dev):
-    thres = torch.zeros(len(thres_lst), 1, requires_grad=False,dtype=torch.float)
+def create_thresholds(thres_lst):
+    thres = torch.zeros(len(thres_lst), 1, requires_grad=False,
+                        dtype=torch.float)
     for qidx, t in enumerate(thres_lst):
         thres[qidx] = t
     return thres
