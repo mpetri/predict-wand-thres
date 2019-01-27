@@ -253,3 +253,22 @@ class InvertedIndexData(Dataset):
 
     def __getitem__(self, idx):
         return self.tensor_queries[idx, :], self.tensor_thres[idx, :]
+
+
+class InvertedIndexSubSet(Dataset):
+    def __init__(self, full_dataset, start, subset_size, device):
+        self.queries = full_dataset.queries[start:start + subset_size]
+        self.tensor_queries = full_dataset.tensor_queries[start:start + subset_size].to(
+            device)
+        self.thres_10 = full_dataset.thres_10[start:start + subset_size]
+        self.thres_100 = full_dataset.thres_100[start:start + subset_size]
+        self.thres_1000 = full_dataset.thres_1000[start:start + subset_size]
+        self.qids = full_dataset.qterms[start:start + subset_size]
+        self.tensor_thres = full_dataset.tensor_thres[start:start + subset_size].to(
+            device)
+
+    def __len__(self):
+        return len(self.queries)
+
+    def __getitem__(self, idx):
+        return self.tensor_queries[idx, :], self.tensor_thres[idx, :]

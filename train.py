@@ -130,7 +130,7 @@ if args.debug == True:
     train_file = args.data_dir + "/debug.json"
 dev_file = args.data_dir + "/dev.json"
 
-dataset = data_loader.InvertedIndexData(args, train_file)
+full_dataset = data_loader.InvertedIndexData(args, train_file)
 dev_dataset = data_loader.InvertedIndexData(args, dev_file)
 
 output_prefix = args.data_dir + "/models/"
@@ -156,9 +156,8 @@ for q in args.quantiles:
             epoch_start_time = time.time()
             my_print("start epoch {}/{}".format(epoch, args.epochs))
             for start in range(0, len(dataset), 1000000):
-                subset = torch.utils.data.Subset(
-                    dataset, list(range(start, start + 1000000)))
-                subset = subset.to(args.device)
+                subset = data_loader.InvertedIndexSubSet(
+                    full_dataset, start, 1000000, args.device)
                 train(model, epoch, subset, q)
             pred, actual = evaluate(model, dev_dataset)
             q_eval_loss = quantile_loss_eval(pred, actual, q)
