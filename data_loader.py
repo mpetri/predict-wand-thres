@@ -123,7 +123,7 @@ def query_to_np(query):
     return qry_np
 
 
-def read_queries_and_thres(query_file, data_size=5000):
+def read_queries_and_thres(query_file, data_size=5000,printDeterm=False):
     ### read query file ###
     queries = []
     thres_10 = []
@@ -137,17 +137,21 @@ def read_queries_and_thres(query_file, data_size=5000):
         lines = fp.readlines()
         for line in tqdm(lines, desc="read qrys", unit="qrys"):
             total += 1
-            qry_dict = rapidjson.loads(line)
+            try:
+                qry_dict = rapidjson.loads(line)
+            except:
+                print("error in line {} = '{}".format(total,line))
             new_query = Query()
             new_query.term_ids = qry_dict["term_ids"]
+            qlen = len(new_query.term_ids)
             if len(new_query.term_ids) <= hyperparams.default_max_qry_len:
                 new_query.id = qry_dict["id"]
                 new_query.wand_thres_10 = float(qry_dict["wand_thres_10"])
                 new_query.wand_thres_100 = float(qry_dict["wand_thres_100"])
                 new_query.wand_thres_1000 = float(qry_dict["wand_thres_1000"])
-                new_query.qmax_k_10 = float(qry_dict["max_qk10"])
-                new_query.qmax_k_100 = float(qry_dict["max_qk100"])
-                new_query.qmax_k_1000 = float(qry_dict["max_qk1000"])
+                new_query.qmax_k_10 = 0.0
+                new_query.qmax_k_100 = 0.0
+                new_query.qmax_k_1000 = 0.0
                 # qid,qlen,k,model,rho,pred,actual
                 for t in qry_dict["term_data"]:
                     new_term = Term()
@@ -158,6 +162,9 @@ def read_queries_and_thres(query_file, data_size=5000):
                     new_term.k10_max = float(t["k10m"])
                     new_term.k100_max = float(t["k100m"])
                     new_term.k1000_max = float(t["k1000m"])
+                    new_query.qmax_k_10 = max(new_query.qmax_k_10,new_term.k10_max)
+                    new_query.qmax_k_100 = max(new_query.qmax_k_100,new_term.k100_max)
+                    new_query.qmax_k_1000 = max(new_query.qmax_k_1000,new_term.k1000_max)
 
                     new_term.mean_ft = float(t["mean_ft"])
                     new_term.med_ft = float(t["med_ft"])
@@ -194,6 +201,10 @@ def read_queries_and_thres(query_file, data_size=5000):
 
                     new_query.term_data.append(new_term)
 
+                if printDeterm == True:
+                    print("{},{},{},{},{},{}".format(new_query.id,qlen,10,"Qk",new_query.qmax_k_10,new_query.wand_thres_10))
+                    print("{},{},{},{},{},{}".format(new_query.id,qlen,100,"Qk",new_query.qmax_k_100,new_query.wand_thres_100))
+                    print("{},{},{},{},{},{}".format(new_query.id,qlen,1000,"Qk",new_query.qmax_k_1000,new_query.wand_thres_1000))
                 def sort_Ft(val):
                     return val.Ft
                 new_query.term_data.sort(key=sort_Ft)
@@ -230,9 +241,9 @@ def create_thresholds(thres_lst):
 
 
 class InvertedIndexData(Dataset):
-    def __init__(self, args, qry_file):
+    def __init__(self, args, qry_file,printDet=False):
         self.queries, self.thres_10, self.thres_100, self.thres_1000, self.qids, self.qterms = read_queries_and_thres(
-            qry_file, 0)
+            qry_file, 0,printDet)
         self.tensor_queries = create_tensors_from_np(self.queries)
         self.qlens = []
         for qt in self.qterms:
