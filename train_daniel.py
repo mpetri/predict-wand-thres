@@ -258,5 +258,5 @@ if __name__ == "__main__":
 
     if args.test is not None:
         filename = args.test + '.k%d' % args.k
-        save_test_preds(predictions, test_ids, test_term_ids, filename, test_gross_1000, test_thres1000)
+        save_test_preds(predictions, test_ids, test_term_ids, filename, test_gross_10, test_thres10)
     import ipdb; ipdb.set_trace()

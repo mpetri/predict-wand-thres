@@ -157,6 +157,7 @@ def read_queries_and_thres(query_file, data_size=5000,printDeterm=False):
                 new_query.qmax_k_100 = 0.0
                 new_query.qmax_k_1000 = 0.0
                 # qid,qlen,k,model,rho,pred,actual
+                terms_total = 0
                 for t in qry_dict["term_data"]:
                     terms_total += 1
                     if terms_total > 10:
