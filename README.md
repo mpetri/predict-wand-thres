@@ -2,21 +2,21 @@
 
 Prediction code for the paper
 
-# USAGE
+## USAGE
 
-0. Install python requirements
+### 0. Install python requirements
 
 ```
 pip install -r requirements.txt
 ```
 
-1. Use `./tools/index_stats_json.cpp` to extract statistics for queries from an inverted index (pisa/ds2i):
+### 1. Use `./tools/index_stats_json.cpp` to extract statistics for queries from an inverted index (pisa/ds2i):
 
 ```
 ./index_stats_json block_optpfor index_file qry_file wand_data > query_data.json
 ```
 
-2. Create a collection using the `./scripts/create_col.sh` script:
+### 2. Create a collection using the `./scripts/create_col.sh` script:
 
 ```
 ./scripts/create_col.sh ./query_data.json ./data/sample/
@@ -33,13 +33,13 @@ NUM DEBUG = 3000 ./data/sample//debug.json
 
 which splits the input qry file into train/dev/test parts
 
-3. To train the MLP model point it to the directory and specify some parameters (see paper for details)
+### 3. To train the MLP model point it to the directory and specify some parameters (see paper for details)
 
 ```
 python ./train.py --data_dir ./data/sample/ --device cuda:0 --layers 4 --batch_size 8192 --k 1000 --quantile 0.85
 ```
 
-4. Make predictions on the test file:
+### 4. Make predictions on the test file:
 
 ```
 python ./test.py --model ./data/sample/MLP-L4-Q0.85-K1000.model --queries ./data/sample/test.json --k 1000
@@ -49,7 +49,7 @@ Parameters:
         model: .\data\sample\models\MLP-L4-Q0.85-K1000.model
         queries: .\data\sample\test.json
 Using torch device: cpu
-read qrys: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1000/1000 [00:00<00:00, 2946.22qrys/s]
+read qrys: 100%|███████| 1000/1000 [00:00<00:00, 2946.22qrys/s]
 skipped queries 1 out of 1000
 dataset statistics: .\data\sample\test.json
         queries = 999
