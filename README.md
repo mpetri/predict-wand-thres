@@ -2,6 +2,11 @@
 
 Prediction code for the paper
 
+```
+Matthias Petri, Alistair Moffat, Joel Mackenzie, J. Shane Culpepper, Daniel Beck:
+Accelerated Query Processing Via Similarity Score Prediction. SIGIR 2019: 485-494
+```
+
 ## USAGE
 
 ### 0. Install python requirements
@@ -36,7 +41,12 @@ which splits the input qry file into train/dev/test parts
 ### 3. To train the MLP model point it to the directory and specify some parameters (see paper for details)
 
 ```
-python ./train.py --data_dir ./data/sample/ --device cuda:0 --layers 4 --batch_size 8192 --k 1000 --quantile 0.85
+python ./train.py --data_dir ./data/sample/ \ 
+                  --device cuda:0 \
+                  --layers 4 \
+                  --batch_size 8192 \
+                  --k 1000 \
+                  --quantile 0.85
 ```
 
 ### 4. Make predictions on the test file:
